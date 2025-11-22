@@ -189,3 +189,38 @@ export function gridToString(grid: SudokuGrid): string {
   }
   return result;
 }
+
+// Exportierte Funktion: Prüft ob eine Zahl an Position gültig ist
+export function isValidMove(grid: SudokuGrid, row: number, col: number, num: number): boolean {
+  return isValid(grid, row, col, num);
+}
+
+// Exportierte Funktion: Löst ein gegebenes Sudoku
+export function solveSudoku(grid: SudokuGrid): { solved: boolean; solution: SudokuGrid } {
+  const solutionGrid = grid.map(row => [...row]);
+  
+  const solve = (g: SudokuGrid): boolean => {
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (g[row][col] === 0) {
+          for (let num = 1; num <= 9; num++) {
+            if (isValid(g, row, col, num)) {
+              g[row][col] = num;
+              
+              if (solve(g)) {
+                return true;
+              }
+              
+              g[row][col] = 0;
+            }
+          }
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+  
+  const solved = solve(solutionGrid);
+  return { solved, solution: solutionGrid };
+}

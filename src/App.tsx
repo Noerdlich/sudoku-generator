@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import SudokuBoard from './components/SudokuBoard';
-import { generateSudoku, SudokuGrid } from './utils/sudokuGenerator';
+import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
 
 function App() {
   // Initialisiere puzzle und solution zusammen aus demselben generierten Sudoku
@@ -19,6 +19,10 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [hintCooldown, setHintCooldown] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
+  const [customMode, setCustomMode] = useState(false);
+  const [customPuzzle, setCustomPuzzle] = useState<SudokuGrid>(() =>
+    Array(9).fill(null).map(() => Array(9).fill(0))
+  );
 
   // Cooldown Timer für Tipp-Button
   useEffect(() => {
@@ -48,22 +52,78 @@ function App() {
   }, []);
 
   const handleCellChange = useCallback((row: number, col: number, value: number) => {
-    setUserGrid(prev => {
-      const newGrid = prev.map(r => [...r]);
-      newGrid[row][col] = value;
-      return newGrid;
-    });
-    // Setze Fehleranzeige zurück wenn Benutzer etwas ändert
-    if (showErrors) {
-      setShowErrors(false);
+    if (customMode) {
+      // Im Custom-Modus: Ändere das custom puzzle
+      setCustomPuzzle(prev => {
+        const newGrid = prev.map(r => [...r]);
+        newGrid[row][col] = value;
+        return newGrid;
+      });
+      // Prüfe Validität in Echtzeit
+      if (value !== 0) {
+        const tempGrid = customPuzzle.map((r, i) => r.map((c, j) => (i === row && j === col) ? 0 : c));
+        if (!isValidMove(tempGrid, row, col, value)) {
+          setShowErrors(true);
+        } else {
+          setShowErrors(false);
+        }
+      } else {
+        setShowErrors(false);
+      }
+    } else {
+      // Normaler Modus: Ändere userGrid
+      setUserGrid(prev => {
+        const newGrid = prev.map(r => [...r]);
+        newGrid[row][col] = value;
+        return newGrid;
+      });
+      // Setze Fehleranzeige zurück wenn Benutzer etwas ändert
+      if (showErrors) {
+        setShowErrors(false);
+      }
     }
-  }, [showErrors]);
+  }, [showErrors, customMode, customPuzzle]);
 
   const handleReset = useCallback(() => {
     setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
     setShowSolution(false);
     setShowErrors(false);
   }, []);
+
+  const toggleCustomMode = useCallback(() => {
+    if (!customMode) {
+      // Wechsel zu Custom-Modus
+      setCustomMode(true);
+      setCustomPuzzle(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setPuzzle(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setSolution(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setShowErrors(false);
+      setHintCooldown(0);
+    } else {
+      // Zurück zum normalen Modus
+      setCustomMode(false);
+      const newGame = generateSudoku(difficulty);
+      setPuzzle(newGame.puzzle);
+      setSolution(newGame.solution);
+      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setShowErrors(false);
+      setHintCooldown(0);
+    }
+  }, [customMode, difficulty]);
+
+  const solveCustomPuzzle = useCallback(() => {
+    const result = solveSudoku(customPuzzle);
+    if (result.solved) {
+      setPuzzle(customPuzzle);
+      setSolution(result.solution);
+      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setShowErrors(false);
+      alert('✅ Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.');
+    } else {
+      alert('❌ Dieses Sudoku hat keine gültige Lösung. Bitte überprüfe deine Eingaben.');
+    }
+  }, [customPuzzle]);
 
   const showHint = useCallback(() => {
     // Erstelle temporäres Grid mit korrekten Werten (ignoriere falsche Benutzereingaben)
@@ -208,54 +268,115 @@ function App() {
       
       <main className="App-main">
         <div className="controls">
-          <div className="difficulty-buttons">
+          <div className="mode-toggle">
             <button
-              className={`btn ${difficulty === 'easy' ? 'active' : ''}`}
-              onClick={() => generateNewPuzzle('easy')}
-              disabled={isGenerating}
+              className={`btn ${!customMode ? 'active' : ''}`}
+              onClick={toggleCustomMode}
+              disabled={isGenerating || customMode}
             >
-              Leicht
+              Generiertes Sudoku
             </button>
             <button
-              className={`btn ${difficulty === 'medium' ? 'active' : ''}`}
-              onClick={() => generateNewPuzzle('medium')}
-              disabled={isGenerating}
+              className={`btn ${customMode ? 'active' : ''}`}
+              onClick={toggleCustomMode}
+              disabled={isGenerating || !customMode}
             >
-              Mittel
-            </button>
-            <button
-              className={`btn ${difficulty === 'hard' ? 'active' : ''}`}
-              onClick={() => generateNewPuzzle('hard')}
-              disabled={isGenerating}
-            >
-              Schwer
+              Eigenes Sudoku
             </button>
           </div>
+
+          {!customMode && (
+            <div className="difficulty-buttons">
+              <button
+                className={`btn ${difficulty === 'easy' ? 'active' : ''}`}
+                onClick={() => generateNewPuzzle('easy')}
+                disabled={isGenerating}
+              >
+                Leicht
+              </button>
+              <button
+                className={`btn ${difficulty === 'medium' ? 'active' : ''}`}
+                onClick={() => generateNewPuzzle('medium')}
+                disabled={isGenerating}
+              >
+                Mittel
+              </button>
+              <button
+                className={`btn ${difficulty === 'hard' ? 'active' : ''}`}
+                onClick={() => generateNewPuzzle('hard')}
+                disabled={isGenerating}
+              >
+                Schwer
+              </button>
+            </div>
+          )}
+
+          {customMode && (
+            <div className="custom-buttons">
+              <button
+                className="btn btn-primary"
+                onClick={solveCustomPuzzle}
+                disabled={isGenerating}
+              >
+                🧩 Sudoku lösen
+              </button>
+              <p className="custom-hint">Gib dein Sudoku ein und klicke auf "Sudoku lösen"</p>
+            </div>
+          )}
           
-          <div className="action-buttons">
-            <button
-              className="btn btn-secondary"
-              onClick={handleReset}
-              disabled={isGenerating}
-            >
-              Zurücksetzen
-            </button>
-            <button
-              className="btn btn-hint"
-              onClick={showHint}
-              disabled={isGenerating || hintCooldown > 0}
-              title={hintCooldown > 0 ? `Warte noch ${hintCooldown} Sekunden` : 'Eine korrekte Zahl in ein zufälliges Feld einfügen'}
-            >
-              {hintCooldown > 0 ? `Tipp (${hintCooldown}s)` : '💡 Tipp anzeigen'}
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={checkSolution}
-              disabled={isGenerating || showSolution}
-            >
-              Prüfen
-            </button>
-          </div>
+          {!customMode && (
+            <div className="action-buttons">
+              <button
+                className="btn btn-secondary"
+                onClick={handleReset}
+                disabled={isGenerating}
+              >
+                Zurücksetzen
+              </button>
+              <button
+                className="btn btn-hint"
+                onClick={showHint}
+                disabled={isGenerating || hintCooldown > 0}
+                title={hintCooldown > 0 ? `Warte noch ${hintCooldown} Sekunden` : 'Eine korrekte Zahl in ein zufälliges Feld einfügen'}
+              >
+                {hintCooldown > 0 ? `Tipp (${hintCooldown}s)` : '💡 Tipp anzeigen'}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={checkSolution}
+                disabled={isGenerating || showSolution}
+              >
+                Prüfen
+              </button>
+            </div>
+          )}
+
+          {customMode && puzzle.some(row => row.some(cell => cell !== 0)) && (
+            <div className="action-buttons">
+              <button
+                className="btn btn-secondary"
+                onClick={handleReset}
+                disabled={isGenerating}
+              >
+                Zurücksetzen
+              </button>
+              <button
+                className="btn btn-hint"
+                onClick={showHint}
+                disabled={isGenerating || hintCooldown > 0}
+                title={hintCooldown > 0 ? `Warte noch ${hintCooldown} Sekunden` : 'Eine korrekte Zahl in ein zufälliges Feld einfügen'}
+              >
+                {hintCooldown > 0 ? `Tipp (${hintCooldown}s)` : '💡 Tipp anzeigen'}
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={checkSolution}
+                disabled={isGenerating || showSolution}
+              >
+                Prüfen
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="board-container">
@@ -266,21 +387,27 @@ function App() {
             </div>
           ) : (
             <SudokuBoard
-              puzzle={puzzle}
+              puzzle={customMode ? customPuzzle : puzzle}
               solution={solution}
               userGrid={userGrid}
               onCellChange={handleCellChange}
               showSolution={showSolution}
               showErrors={showErrors}
+              customMode={customMode}
             />
           )}
         </div>
         
         <div className="info">
           <p>
-            <strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
-            Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
-            Falsche Felder werden rot markiert, wenn du auf "Prüfen" klickst.
+            {customMode ? (
+              <><strong>Eigenes Sudoku:</strong> Gib deine Zahlen ein. Falsche Eingaben werden rot markiert. 
+              Klicke auf "Sudoku lösen", um die Lösung zu berechnen und Tipps zu erhalten.</>
+            ) : (
+              <><strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
+              Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
+              Falsche Felder werden rot markiert, wenn du auf "Prüfen" klickst.</>
+            )}
           </p>
         </div>
       </main>

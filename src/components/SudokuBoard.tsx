@@ -9,6 +9,7 @@ interface SudokuBoardProps {
   onCellChange: (row: number, col: number, value: number) => void;
   showSolution: boolean;
   showErrors: boolean;
+  customMode?: boolean;
 }
 
 const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -17,7 +18,8 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   userGrid,
   onCellChange,
   showSolution,
-  showErrors
+  showErrors,
+  customMode = false
 }) => {
   const handleInputChange = (row: number, col: number, value: string) => {
     const num = value === '' ? 0 : parseInt(value, 10);
@@ -76,7 +78,7 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
               className={getCellClassName(row, col)}
               value={displayValue(row, col)}
               onChange={(e) => handleInputChange(row, col, e.target.value)}
-              disabled={puzzle[row][col] !== 0 || showSolution}
+              disabled={(!customMode && puzzle[row][col] !== 0) || showSolution}
               maxLength={1}
               inputMode="numeric"
             />

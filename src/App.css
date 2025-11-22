@@ -40,12 +40,22 @@
   align-items: center;
 }
 
+.mode-toggle,
 .difficulty-buttons,
-.action-buttons {
+.action-buttons,
+.custom-buttons {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+}
+
+.custom-hint {
+  margin: 0;
+  color: white;
+  font-size: 0.9rem;
+  opacity: 0.9;
 }
 
 .btn {
