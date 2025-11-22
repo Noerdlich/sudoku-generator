@@ -236,7 +236,7 @@ function App() {
       let hasErrors = false;
       let isComplete = true;
       
-      // Prüfe jede Zelle auf Gültigkeit
+      // Prüfe jede Zelle auf Duplikate
       for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
           const num = combinedGrid[i][j];
@@ -245,16 +245,38 @@ function App() {
             continue;
           }
           
-          // Temporäres Grid zum Testen (ohne die aktuelle Zelle)
-          const tempGrid = combinedGrid.map((r, ri) => 
-            r.map((c, ci) => (ri === i && ci === j) ? 0 : c)
-          );
-          
-          // Nutze isValidMove um zu prüfen ob die Zahl an dieser Position gültig ist
-          if (!isValidMove(tempGrid, i, j, num)) {
-            hasErrors = true;
+          // Prüfe Zeile auf Duplikate
+          for (let x = 0; x < 9; x++) {
+            if (x !== j && combinedGrid[i][x] === num) {
+              hasErrors = true;
+              break;
+            }
           }
+          
+          // Prüfe Spalte auf Duplikate
+          for (let x = 0; x < 9; x++) {
+            if (x !== i && combinedGrid[x][j] === num) {
+              hasErrors = true;
+              break;
+            }
+          }
+          
+          // Prüfe 3x3 Block auf Duplikate
+          const startRow = Math.floor(i / 3) * 3;
+          const startCol = Math.floor(j / 3) * 3;
+          for (let r = startRow; r < startRow + 3; r++) {
+            for (let c = startCol; c < startCol + 3; c++) {
+              if ((r !== i || c !== j) && combinedGrid[r][c] === num) {
+                hasErrors = true;
+                break;
+              }
+            }
+            if (hasErrors) break;
+          }
+          
+          if (hasErrors) break;
         }
+        if (hasErrors) break;
       }
       
       if (hasErrors) {
