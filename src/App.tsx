@@ -235,7 +235,6 @@ function App() {
       
       let hasErrors = false;
       let isComplete = true;
-      const errorCells: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
       
       // Prüfe jede Zelle auf Gültigkeit
       for (let i = 0; i < 9; i++) {
@@ -246,32 +245,14 @@ function App() {
             continue;
           }
           
-          // Prüfe Zeile
-          for (let col = 0; col < 9; col++) {
-            if (col !== j && combinedGrid[i][col] === num) {
-              errorCells[i][j] = true;
-              hasErrors = true;
-            }
-          }
+          // Temporäres Grid zum Testen (ohne die aktuelle Zelle)
+          const tempGrid = combinedGrid.map((r, ri) => 
+            r.map((c, ci) => (ri === i && ci === j) ? 0 : c)
+          );
           
-          // Prüfe Spalte
-          for (let row = 0; row < 9; row++) {
-            if (row !== i && combinedGrid[row][j] === num) {
-              errorCells[i][j] = true;
-              hasErrors = true;
-            }
-          }
-          
-          // Prüfe 3x3 Block
-          const startRow = Math.floor(i / 3) * 3;
-          const startCol = Math.floor(j / 3) * 3;
-          for (let row = startRow; row < startRow + 3; row++) {
-            for (let col = startCol; col < startCol + 3; col++) {
-              if ((row !== i || col !== j) && combinedGrid[row][col] === num) {
-                errorCells[i][j] = true;
-                hasErrors = true;
-              }
-            }
+          // Nutze isValidMove um zu prüfen ob die Zahl an dieser Position gültig ist
+          if (!isValidMove(tempGrid, i, j, num)) {
+            hasErrors = true;
           }
         }
       }
