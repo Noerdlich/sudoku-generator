@@ -226,13 +226,21 @@ function App() {
   }, [puzzle, userGrid, solution]);
 
   const checkSolution = useCallback(() => {
+    // Im Custom-Modus erst prüfen ob das Puzzle gelöst wurde
+    if (customMode && solution.every(row => row.every(cell => cell === 0))) {
+      alert('⚠️ Bitte klicke zuerst auf "Sudoku lösen", um dein Sudoku zu validieren.');
+      return;
+    }
+
     let correct = true;
     let complete = true;
     let hasErrors = false;
     
+    const activePuzzle = customMode ? customPuzzle : puzzle;
+    
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        if (puzzle[i][j] === 0) {
+        if (activePuzzle[i][j] === 0) {
           if (userGrid[i][j] === 0) {
             complete = false;
           } else if (userGrid[i][j] !== solution[i][j]) {
@@ -257,7 +265,7 @@ function App() {
       setShowErrors(false);
       alert('⚠️ Das Sudoku ist noch nicht vollständig ausgefüllt.');
     }
-  }, [puzzle, userGrid, solution]);
+  }, [puzzle, userGrid, solution, customMode, customPuzzle]);
 
   return (
     <div className="App">
@@ -271,15 +279,15 @@ function App() {
           <div className="mode-toggle">
             <button
               className={`btn ${!customMode ? 'active' : ''}`}
-              onClick={toggleCustomMode}
-              disabled={isGenerating || customMode}
+              onClick={() => !customMode ? null : toggleCustomMode()}
+              disabled={isGenerating || !customMode}
             >
               Generiertes Sudoku
             </button>
             <button
               className={`btn ${customMode ? 'active' : ''}`}
-              onClick={toggleCustomMode}
-              disabled={isGenerating || !customMode}
+              onClick={() => customMode ? null : toggleCustomMode()}
+              disabled={isGenerating || customMode}
             >
               Eigenes Sudoku
             </button>
