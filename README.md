@@ -1,46 +1,132 @@
-# Getting Started with Create React App
+# 🎲 Sudoku Generator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Eine React-basierte Web-App zum Generieren und Lösen von Sudoku-Rätseln.
 
-## Available Scripts
+## ✨ Features
 
-In the project directory, you can run:
+- **Lösbare Sudokus**: Alle generierten Sudokus haben garantiert genau eine Lösung
+- **Doppelte Achsen-Symmetrie**: Zahlen werden symmetrisch auf beiden Achsen (horizontal und vertikal) entfernt
+- **3 Schwierigkeitsgrade**: Leicht, Mittel, Schwer
+- **Interaktive Lösung**: Überprüfe deine Lösung mit dem Prüfen-Button
+- **Responsive Design**: Funktioniert auf Desktop und Mobilgeräten
+- **GitHub Pages Ready**: Einfaches Deployment als statische Website
 
-### `npm start`
+## 🚀 Live Demo
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Die App ist verfügbar unter: [https://Noerdlich.github.io/sudoku-generator](https://Noerdlich.github.io/sudoku-generator)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🛠️ Installation & Entwicklung
 
-### `npm test`
+### Voraussetzungen
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (Version 16 oder höher)
+- npm
 
-### `npm run build`
+### Lokale Entwicklung
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# Repository klonen
+git clone https://github.com/Noerdlich/sudoku-generator.git
+cd sudoku-generator
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Abhängigkeiten installieren
+npm install
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Entwicklungsserver starten
+npm start
+```
 
-### `npm run eject`
+Die App öffnet sich automatisch unter [http://localhost:3000](http://localhost:3000).
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Build für Produktion
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm run build
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Erstellt eine optimierte Production-Build im `build/` Ordner.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## 📦 Deployment auf GitHub Pages
 
-## Learn More
+### Automatisches Deployment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Die App ist mit GitHub Actions für automatisches Deployment konfiguriert:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. Push deine Änderungen zum `main` Branch
+2. GitHub Actions baut und deployt automatisch
+
+### Manuelles Deployment
+
+```bash
+npm run deploy
+```
+
+### GitHub Pages einrichten
+
+1. Gehe zu deinem Repository auf GitHub
+2. Navigiere zu **Settings** → **Pages**
+3. Wähle unter **Source**: `GitHub Actions`
+4. Die App wird automatisch unter `https://<dein-username>.github.io/sudoku-generator` verfügbar sein
+
+## 🎮 Verwendung
+
+1. **Schwierigkeit wählen**: Klicke auf Leicht, Mittel oder Schwer, um ein neues Sudoku zu generieren
+2. **Zahlen eingeben**: Klicke in ein leeres Feld und gib eine Zahl von 1-9 ein
+3. **Eigene Eingaben**: Deine Eingaben werden in Blau angezeigt
+4. **Prüfen**: Klicke auf "Prüfen", um deine Lösung zu überprüfen und Feedback zu erhalten
+5. **Lösung anzeigen**: Zeige die vollständige Lösung an
+6. **Zurücksetzen**: Lösche alle deine Eingaben und starte neu
+
+## 🧠 Algorithmus
+
+Die App verwendet einen Backtracking-Algorithmus mit folgenden Schritten:
+
+1. **Vollständiges Grid generieren**: Erstellt ein vollständig ausgefülltes, gültiges Sudoku
+2. **Symmetrisches Entfernen**: Entfernt Zahlen mit doppelter Achsen-Symmetrie (horizontal und vertikal gespiegelt)
+3. **Eindeutigkeit prüfen**: Stellt sicher, dass das Sudoku genau eine Lösung hat
+4. **Schwierigkeitsanpassung**: Entfernt mehr Zahlen für höhere Schwierigkeitsgrade
+
+### Symmetrie-Erklärung
+
+Bei der Zahlenentfernung wird eine **doppelte Achsen-Symmetrie** verwendet:
+- Wenn eine Zahl an Position (r, c) entfernt wird
+- Werden auch die Zahlen an (8-r, c), (r, 8-c) und (8-r, 8-c) entfernt
+- Dies erzeugt ein visuell ausgewogenes und ästhetisches Muster
+
+## 📁 Projektstruktur
+
+```
+sudoku-generator/
+├── src/
+│   ├── components/
+│   │   ├── SudokuBoard.tsx      # Sudoku-Board Komponente
+│   │   └── SudokuBoard.css      # Board Styling
+│   ├── utils/
+│   │   └── sudokuGenerator.ts   # Sudoku-Generator Logik
+│   ├── App.tsx                  # Haupt-App Komponente
+│   ├── App.css                  # App Styling
+│   ├── index.tsx                # Entry Point
+│   └── index.css                # Globale Styles
+├── public/                      # Statische Assets
+├── .github/
+│   └── workflows/
+│       └── deploy.yml           # GitHub Actions Workflow
+├── package.json
+└── README.md
+```
+
+## 🔧 Technologie-Stack
+
+- **React 19** - UI Framework
+- **TypeScript** - Type Safety
+- **CSS3** - Styling mit Gradients & Animations
+- **GitHub Actions** - CI/CD
+- **GitHub Pages** - Hosting
+
+## 📝 Lizenz
+
+MIT License - Siehe LICENSE Datei für Details
+
+## 👤 Autor
+
+Erstellt von [Noerdlich](https://github.com/Noerdlich)
