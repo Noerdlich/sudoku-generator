@@ -98,6 +98,20 @@
   background-color: #3182ce;
 }
 
+.btn-hint {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.btn-hint:hover:not(:disabled) {
+  background-color: #d97706;
+}
+
+.btn-hint:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .board-container {
   margin: 1rem 0;
   display: flex;

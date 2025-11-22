@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import SudokuBoard from './components/SudokuBoard';
 import { generateSudoku, SudokuGrid } from './utils/sudokuGenerator';
@@ -21,10 +21,22 @@ function App() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [showSolution, setShowSolution] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [hintCooldown, setHintCooldown] = useState(0);
+
+  // Cooldown Timer für Tipp-Button
+  useEffect(() => {
+    if (hintCooldown > 0) {
+      const timer = setTimeout(() => {
+        setHintCooldown(hintCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [hintCooldown]);
 
   const generateNewPuzzle = useCallback((diff: 'easy' | 'medium' | 'hard') => {
     setIsGenerating(true);
     setShowSolution(false);
+    setHintCooldown(0);
     
     // Kleine Verzögerung für bessere UX
     setTimeout(() => {
@@ -50,9 +62,36 @@ function App() {
     setShowSolution(false);
   }, []);
 
-  const toggleSolution = useCallback(() => {
-    setShowSolution(prev => !prev);
-  }, []);
+  const showHint = useCallback(() => {
+    // Finde alle leeren Zellen die noch nicht ausgefüllt sind
+    const emptyCells: [number, number][] = [];
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        if (puzzle[i][j] === 0 && userGrid[i][j] === 0) {
+          emptyCells.push([i, j]);
+        }
+      }
+    }
+    
+    if (emptyCells.length === 0) {
+      alert('⚠️ Alle Felder sind bereits ausgefüllt!');
+      return;
+    }
+    
+    // Wähle eine zufällige leere Zelle
+    const randomIndex = Math.floor(Math.random() * emptyCells.length);
+    const [row, col] = emptyCells[randomIndex];
+    
+    // Füge die korrekte Zahl ein
+    setUserGrid(prev => {
+      const newGrid = prev.map(r => [...r]);
+      newGrid[row][col] = solution[row][col];
+      return newGrid;
+    });
+    
+    // Starte Cooldown
+    setHintCooldown(20);
+  }, [puzzle, userGrid, solution]);
 
   const checkSolution = useCallback(() => {
     let correct = true;
@@ -121,11 +160,12 @@ function App() {
               Zurücksetzen
             </button>
             <button
-              className="btn btn-secondary"
-              onClick={toggleSolution}
-              disabled={isGenerating}
+              className="btn btn-hint"
+              onClick={showHint}
+              disabled={isGenerating || hintCooldown > 0}
+              title={hintCooldown > 0 ? `Warte noch ${hintCooldown} Sekunden` : 'Eine korrekte Zahl in ein zufälliges Feld einfügen'}
             >
-              {showSolution ? 'Lösung verbergen' : 'Lösung anzeigen'}
+              {hintCooldown > 0 ? `Tipp (${hintCooldown}s)` : '💡 Tipp anzeigen'}
             </button>
             <button
               className="btn btn-primary"
@@ -157,7 +197,7 @@ function App() {
         <div className="info">
           <p>
             <strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
-            Blaue Zahlen sind deine Eingaben. Klicke auf "Prüfen", um deine Lösung zu überprüfen.
+            Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
           </p>
         </div>
       </main>
