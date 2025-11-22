@@ -113,6 +113,54 @@ function App() {
   }, [customMode, difficulty]);
 
   const solveCustomPuzzle = useCallback(() => {
+    // Validiere das Custom-Sudoku vor dem Lösen
+    let hasErrors = false;
+    
+    // Prüfe auf Duplikate
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        const num = customPuzzle[i][j];
+        if (num === 0) continue;
+        
+        // Prüfe Zeile auf Duplikate
+        for (let x = 0; x < 9; x++) {
+          if (x !== j && customPuzzle[i][x] === num) {
+            hasErrors = true;
+            break;
+          }
+        }
+        
+        // Prüfe Spalte auf Duplikate
+        for (let x = 0; x < 9; x++) {
+          if (x !== i && customPuzzle[x][j] === num) {
+            hasErrors = true;
+            break;
+          }
+        }
+        
+        // Prüfe 3x3 Block auf Duplikate
+        const startRow = Math.floor(i / 3) * 3;
+        const startCol = Math.floor(j / 3) * 3;
+        for (let r = startRow; r < startRow + 3; r++) {
+          for (let c = startCol; c < startCol + 3; c++) {
+            if ((r !== i || c !== j) && customPuzzle[r][c] === num) {
+              hasErrors = true;
+              break;
+            }
+          }
+          if (hasErrors) break;
+        }
+        
+        if (hasErrors) break;
+      }
+      if (hasErrors) break;
+    }
+    
+    if (hasErrors) {
+      alert('❌ Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.');
+      return;
+    }
+    
     const result = solveSudoku(customPuzzle);
     if (result.solved) {
       setPuzzle(customPuzzle);
