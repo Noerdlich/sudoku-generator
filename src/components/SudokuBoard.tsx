@@ -8,6 +8,7 @@ interface SudokuBoardProps {
   userGrid: SudokuGrid;
   onCellChange: (row: number, col: number, value: number) => void;
   showSolution: boolean;
+  showErrors: boolean;
 }
 
 const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -15,7 +16,8 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   solution,
   userGrid,
   onCellChange,
-  showSolution
+  showSolution,
+  showErrors
 }) => {
   const handleInputChange = (row: number, col: number, value: string) => {
     const num = value === '' ? 0 : parseInt(value, 10);
@@ -35,8 +37,13 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
     if (puzzle[row][col] !== 0) {
       classes.push('preset');
     } else if (userGrid[row][col] !== 0) {
-      // Benutzereingaben werden normal angezeigt (kein direktes Feedback)
-      classes.push('user-input');
+      // Prüfe ob Fehler angezeigt werden sollen
+      if (showErrors && userGrid[row][col] !== solution[row][col]) {
+        classes.push('error');
+      } else {
+        // Benutzereingaben werden normal angezeigt
+        classes.push('user-input');
+      }
     }
     
     return classes.join(' ');

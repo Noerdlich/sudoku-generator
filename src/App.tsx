@@ -22,6 +22,7 @@ function App() {
   const [showSolution, setShowSolution] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [hintCooldown, setHintCooldown] = useState(0);
+  const [showErrors, setShowErrors] = useState(false);
 
   // Cooldown Timer für Tipp-Button
   useEffect(() => {
@@ -37,6 +38,7 @@ function App() {
     setIsGenerating(true);
     setShowSolution(false);
     setHintCooldown(0);
+    setShowErrors(false);
     
     // Kleine Verzögerung für bessere UX
     setTimeout(() => {
@@ -55,11 +57,16 @@ function App() {
       newGrid[row][col] = value;
       return newGrid;
     });
-  }, []);
+    // Setze Fehleranzeige zurück wenn Benutzer etwas ändert
+    if (showErrors) {
+      setShowErrors(false);
+    }
+  }, [showErrors]);
 
   const handleReset = useCallback(() => {
     setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
     setShowSolution(false);
+    setShowErrors(false);
   }, []);
 
   const showHint = useCallback(() => {
@@ -96,6 +103,7 @@ function App() {
   const checkSolution = useCallback(() => {
     let correct = true;
     let complete = true;
+    let hasErrors = false;
     
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
@@ -104,16 +112,24 @@ function App() {
             complete = false;
           } else if (userGrid[i][j] !== solution[i][j]) {
             correct = false;
+            hasErrors = true;
           }
         }
       }
     }
     
     if (complete && correct) {
+      setShowErrors(false);
       alert('🎉 Gratulation! Du hast das Sudoku richtig gelöst!');
-    } else if (complete && !correct) {
-      alert('❌ Leider nicht korrekt. Überprüfe deine Eingaben.');
+    } else if (hasErrors) {
+      setShowErrors(true);
+      if (complete) {
+        alert('❌ Falsche Felder wurden rot markiert. Korrigiere sie und versuche es erneut.');
+      } else {
+        alert('⚠️ Einige Felder sind falsch (rot markiert) und das Sudoku ist noch nicht vollständig.');
+      }
     } else {
+      setShowErrors(false);
       alert('⚠️ Das Sudoku ist noch nicht vollständig ausgefüllt.');
     }
   }, [puzzle, userGrid, solution]);
@@ -190,6 +206,7 @@ function App() {
               userGrid={userGrid}
               onCellChange={handleCellChange}
               showSolution={showSolution}
+              showErrors={showErrors}
             />
           )}
         </div>
@@ -198,6 +215,7 @@ function App() {
           <p>
             <strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
             Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
+            Falsche Felder werden rot markiert, wenn du auf "Prüfen" klickst.
           </p>
         </div>
       </main>

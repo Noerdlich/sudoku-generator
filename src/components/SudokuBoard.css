@@ -48,6 +48,13 @@
   font-weight: 600;
 }
 
+.cell.error {
+  background-color: #fee2e2;
+  color: #dc2626;
+  font-weight: 600;
+  border-color: #ef4444;
+}
+
 .cell.right-border {
   border-right: 3px solid #2c3e50;
 }
