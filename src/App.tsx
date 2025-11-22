@@ -285,7 +285,7 @@ function App() {
       let isComplete = true;
       
       // Prüfe jede Zelle auf Duplikate
-      for (let i = 0; i < 9; i++) {
+      outerLoop: for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
           const num = combinedGrid[i][j];
           if (num === 0) {
@@ -297,7 +297,7 @@ function App() {
           for (let x = 0; x < 9; x++) {
             if (x !== j && combinedGrid[i][x] === num) {
               hasErrors = true;
-              break;
+              break outerLoop;
             }
           }
           
@@ -305,7 +305,7 @@ function App() {
           for (let x = 0; x < 9; x++) {
             if (x !== i && combinedGrid[x][j] === num) {
               hasErrors = true;
-              break;
+              break outerLoop;
             }
           }
           
@@ -316,15 +316,11 @@ function App() {
             for (let c = startCol; c < startCol + 3; c++) {
               if ((r !== i || c !== j) && combinedGrid[r][c] === num) {
                 hasErrors = true;
-                break;
+                break outerLoop;
               }
             }
-            if (hasErrors) break;
           }
-          
-          if (hasErrors) break;
         }
-        if (hasErrors) break;
       }
       
       if (hasErrors) {
