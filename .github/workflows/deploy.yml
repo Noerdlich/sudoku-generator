@@ -31,6 +31,11 @@ jobs:
       - name: Install dependencies
         run: npm install
         
+      - name: Run tests
+        run: npm test -- --watchAll=false --testPathPattern=sudokuGenerator.test.ts --coverage=false
+        env:
+          CI: true
+        
       - name: Build
         run: npm run build
         

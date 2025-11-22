@@ -13,7 +13,7 @@
     "@types/react-dom": "^19.2.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-scripts": "^5.0.1",
+    "react-scripts": "5.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -21,6 +21,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:unit": "react-scripts test --testPathPattern=sudokuGenerator.test.ts --watchAll=false",
+    "test:quick": "react-scripts test --testPathPattern=sudokuGenerator.test.ts --coverage=false --watchAll=false",
+    "test:all": "react-scripts test --watchAll=false --coverage",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
