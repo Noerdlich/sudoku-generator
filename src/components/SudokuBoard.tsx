@@ -28,6 +28,48 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
     }
   };
 
+  const isInvalidCell = (row: number, col: number): boolean => {
+    if (!showErrors) return false;
+    
+    // Im Custom-Modus ohne Lösung: Prüfe auf Regelverstöße
+    if (customMode && solution.every(r => r.every(c => c === 0))) {
+      const combinedGrid: SudokuGrid = puzzle.map((r, i) =>
+        r.map((c, j) => c !== 0 ? c : userGrid[i][j])
+      );
+      
+      const num = combinedGrid[row][col];
+      if (num === 0) return false;
+      
+      // Prüfe Zeile
+      for (let c = 0; c < 9; c++) {
+        if (c !== col && combinedGrid[row][c] === num) return true;
+      }
+      
+      // Prüfe Spalte
+      for (let r = 0; r < 9; r++) {
+        if (r !== row && combinedGrid[r][col] === num) return true;
+      }
+      
+      // Prüfe 3x3 Block
+      const startRow = Math.floor(row / 3) * 3;
+      const startCol = Math.floor(col / 3) * 3;
+      for (let r = startRow; r < startRow + 3; r++) {
+        for (let c = startCol; c < startCol + 3; c++) {
+          if ((r !== row || c !== col) && combinedGrid[r][c] === num) return true;
+        }
+      }
+      
+      return false;
+    }
+    
+    // Normaler Modus oder Custom-Modus mit Lösung: Prüfe gegen Solution
+    if (userGrid[row][col] !== 0 && userGrid[row][col] !== solution[row][col]) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const getCellClassName = (row: number, col: number): string => {
     const classes = ['cell'];
     
@@ -38,9 +80,12 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
     // Vorgefertigte Zellen (nicht editierbar)
     if (puzzle[row][col] !== 0) {
       classes.push('preset');
+      if (isInvalidCell(row, col)) {
+        classes.push('error');
+      }
     } else if (userGrid[row][col] !== 0) {
       // Prüfe ob Fehler angezeigt werden sollen
-      if (showErrors && userGrid[row][col] !== solution[row][col]) {
+      if (isInvalidCell(row, col)) {
         classes.push('error');
       } else {
         // Benutzereingaben werden normal angezeigt

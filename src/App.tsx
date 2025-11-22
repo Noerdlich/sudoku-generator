@@ -226,12 +226,70 @@ function App() {
   }, [puzzle, userGrid, solution]);
 
   const checkSolution = useCallback(() => {
-    // Im Custom-Modus erst prüfen ob das Puzzle gelöst wurde
+    // Im Custom-Modus: Wenn noch keine Lösung vorhanden ist, prüfe nur Validität
     if (customMode && solution.every(row => row.every(cell => cell === 0))) {
-      alert('⚠️ Bitte klicke zuerst auf "Sudoku lösen", um dein Sudoku zu validieren.');
+      // Erstelle ein kombiniertes Grid aus customPuzzle und userGrid
+      const combinedGrid: SudokuGrid = customPuzzle.map((row, i) =>
+        row.map((cell, j) => cell !== 0 ? cell : userGrid[i][j])
+      );
+      
+      let hasErrors = false;
+      let isComplete = true;
+      const errorCells: boolean[][] = Array(9).fill(null).map(() => Array(9).fill(false));
+      
+      // Prüfe jede Zelle auf Gültigkeit
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          const num = combinedGrid[i][j];
+          if (num === 0) {
+            isComplete = false;
+            continue;
+          }
+          
+          // Prüfe Zeile
+          for (let col = 0; col < 9; col++) {
+            if (col !== j && combinedGrid[i][col] === num) {
+              errorCells[i][j] = true;
+              hasErrors = true;
+            }
+          }
+          
+          // Prüfe Spalte
+          for (let row = 0; row < 9; row++) {
+            if (row !== i && combinedGrid[row][j] === num) {
+              errorCells[i][j] = true;
+              hasErrors = true;
+            }
+          }
+          
+          // Prüfe 3x3 Block
+          const startRow = Math.floor(i / 3) * 3;
+          const startCol = Math.floor(j / 3) * 3;
+          for (let row = startRow; row < startRow + 3; row++) {
+            for (let col = startCol; col < startCol + 3; col++) {
+              if ((row !== i || col !== j) && combinedGrid[row][col] === num) {
+                errorCells[i][j] = true;
+                hasErrors = true;
+              }
+            }
+          }
+        }
+      }
+      
+      if (hasErrors) {
+        setShowErrors(true);
+        alert('❌ Es gibt Regelverstöße! Die fehlerhaften Felder wurden rot markiert.');
+      } else if (isComplete) {
+        setShowErrors(false);
+        alert('✅ Alle Zahlen sind bisher korrekt eingetragen! Das Sudoku ist vollständig.');
+      } else {
+        setShowErrors(false);
+        alert('✅ Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.');
+      }
       return;
     }
 
+    // Normaler Modus oder Custom-Modus mit Lösung: Prüfe gegen Solution
     let correct = true;
     let complete = true;
     let hasErrors = false;
@@ -263,7 +321,7 @@ function App() {
       }
     } else {
       setShowErrors(false);
-      alert('⚠️ Das Sudoku ist noch nicht vollständig ausgefüllt.');
+      alert('✅ Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.');
     }
   }, [puzzle, userGrid, solution, customMode, customPuzzle]);
 
