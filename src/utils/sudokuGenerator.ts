@@ -107,7 +107,7 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
   const cellsToRemove = {
     easy: 40,
     medium: 50,
-    hard: 60
+    hard: 65
   }[difficulty];
   
   // Erstelle Liste aller Zellenpositionen (nur obere linke Hälfte für Symmetrie)
