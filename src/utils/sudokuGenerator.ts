@@ -104,39 +104,53 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
   puzzle: SudokuGrid;
   solution: SudokuGrid;
 } {
-  // Erstelle leeres Grid
-  const solution: SudokuGrid = Array(9).fill(null).map(() => Array(9).fill(0));
-  
-  // Fülle das Grid vollständig
-  fillGrid(solution);
-  
-  // Kopiere für das Puzzle
-  const puzzle = copyGrid(solution);
-  
   // Bestimme Anzahl der zu entfernenden Zahlen basierend auf Schwierigkeit
+  // Note: Theoretisches Minimum sind 17 vorgegeben, aber praktisch schwer zu erreichen
   const cellsToRemove = {
-    easy: 40,
-    medium: 50,
-    hard: 65
+    easy: 40,    // 41 vorgegeben
+    medium: 50,  // 31 vorgegeben
+    hard: 56     // 25 vorgegeben - realistisch erreichbar
   }[difficulty];
   
-  // Erstelle Liste aller Zellenpositionen (nur obere linke Hälfte für Symmetrie)
-  const positions: [number, number][] = [];
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
-      // Nur Positionen hinzufügen, die nicht durch Symmetrie bereits abgedeckt sind
-      if (i <= 4 || (i === 4 && j <= 4)) {
-        positions.push([i, j]);
+  // Mindestens 90% des Ziels müssen erreicht werden
+  const minRequired = Math.floor(cellsToRemove * 0.9);
+  
+  let bestPuzzle: SudokuGrid = [];
+  let bestSolution: SudokuGrid = [];
+  let bestRemoved = 0;
+  let totalAttempts = 0;
+  const maxTotalAttempts = 5; // Maximal 5 komplette Neu-Generierungen
+  
+  // Wiederhole bis genug Zellen entfernt wurden
+  while (bestRemoved < minRequired && totalAttempts < maxTotalAttempts) {
+    totalAttempts++;
+    
+    // Erstelle leeres Grid
+    const solution: SudokuGrid = Array(9).fill(null).map(() => Array(9).fill(0));
+    
+    // Fülle das Grid vollständig
+    fillGrid(solution);
+    
+    // Kopiere für das Puzzle
+    const puzzle = copyGrid(solution);
+  
+    // Erstelle Liste aller Zellenpositionen (nur obere linke Hälfte für Symmetrie)
+    const positions: [number, number][] = [];
+    for (let i = 0; i < 9; i++) {
+      for (let j = 0; j < 9; j++) {
+        // Nur Positionen hinzufügen, die nicht durch Symmetrie bereits abgedeckt sind
+        if (i <= 4 || (i === 4 && j <= 4)) {
+          positions.push([i, j]);
+        }
       }
     }
-  }
-  
-  // Mische die Positionen
-  positions.sort(() => Math.random() - 0.5);
-  
-  let removed = 0;
-  let attempts = 0;
-  const maxAttempts = 3; // Maximal 3 Durchläufe mit neu gemischten Positionen
+    
+    // Mische die Positionen
+    positions.sort(() => Math.random() - 0.5);
+    
+    let removed = 0;
+    let attempts = 0;
+    const maxAttempts = 3; // Maximal 3 Durchläufe mit neu gemischten Positionen
   
   // Entferne Zahlen mit doppelter Achsen-Symmetrie (horizontal + vertikal)
   while (removed < cellsToRemove && attempts < maxAttempts) {
@@ -186,16 +200,31 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
       }
     }
     
-    // Wenn wir nicht genug entfernt haben, mische neu und versuche erneut
-    if (removed < cellsToRemove) {
-      attempts++;
-      positions.sort(() => Math.random() - 0.5);
+      // Wenn wir nicht genug entfernt haben, mische neu und versuche erneut
+      if (removed < cellsToRemove) {
+        attempts++;
+        positions.sort(() => Math.random() - 0.5);
+      }
     }
+    
+    // Speichere das beste Ergebnis
+    if (removed > bestRemoved) {
+      bestRemoved = removed;
+      bestPuzzle = puzzle;
+      bestSolution = solution;
+    }
+    
+    // Wenn wir das Ziel erreicht haben, beende die Schleife
+    if (removed >= cellsToRemove) break;
   }
   
+  // Debug: Zähle tatsächlich vorgegebene Zahlen
+  const actualGiven = bestPuzzle.flat().filter(cell => cell !== 0).length;
+  console.log(`Schwierigkeit: ${difficulty}, Ziel entfernt: ${cellsToRemove}, Tatsächlich entfernt: ${bestRemoved}, Vorgegeben: ${actualGiven}, Versuche: ${totalAttempts}`);
+  
   return {
-    puzzle,
-    solution
+    puzzle: bestPuzzle,
+    solution: bestSolution
   };
 }
 
