@@ -54,34 +54,44 @@ function fillGrid(grid: SudokuGrid): boolean {
 }
 
 // Hilfsfunktion: Zählt die Anzahl der Lösungen (stoppt bei 2)
-function countSolutions(grid: SudokuGrid, count = { value: 0 }): number {
+function countSolutions(grid: SudokuGrid, count: { value: number }): number {
+  // Early exit wenn wir bereits mehr als eine Lösung gefunden haben
   if (count.value > 1) return count.value;
 
+  // Suche erste leere Zelle
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       if (grid[row][col] === 0) {
+        // Versuche alle Zahlen 1-9
         for (let num = 1; num <= 9; num++) {
           if (isValid(grid, row, col, num)) {
             grid[row][col] = num;
             countSolutions(grid, count);
-            grid[row][col] = 0;
+            grid[row][col] = 0; // Backtrack
             
+            // Early exit wenn wir bereits mehr als eine Lösung haben
             if (count.value > 1) return count.value;
           }
         }
+        // Keine gültige Zahl gefunden - Backtrack
         return count.value;
       }
     }
   }
+  
+  // Keine leere Zelle mehr - Lösung gefunden
   count.value++;
   return count.value;
 }
 
 // Hilfsfunktion: Prüft ob das Sudoku genau eine Lösung hat
 function hasUniqueSolution(grid: SudokuGrid): boolean {
+  // Erstelle Deep Copy des Grids
   const gridCopy = grid.map(row => [...row]);
-  const count = countSolutions(gridCopy);
-  return count === 1;
+  // Erstelle frisches Count-Objekt
+  const count = { value: 0 };
+  countSolutions(gridCopy, count);
+  return count.value === 1;
 }
 
 // Hilfsfunktion: Erstellt eine Kopie des Grids
