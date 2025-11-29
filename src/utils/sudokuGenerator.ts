@@ -128,8 +128,6 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
   
   // Entferne Zahlen mit doppelter Achsen-Symmetrie (horizontal + vertikal)
   for (const [row, col] of positions) {
-    if (removed >= cellsToRemove) break;
-    
     // Berechne symmetrische Positionen (horizontal und vertikal gespiegelt)
     const symRow = 8 - row;  // Horizontal gespiegelt
     const symCol = 8 - col;  // Vertikal gespiegelt
@@ -150,6 +148,9 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
     // Überspringe wenn bereits Zellen entfernt wurden
     if (affectedCells.some(([r, c]) => puzzle[r][c] === 0)) continue;
     
+    // Prüfe ob wir nach dem Entfernen dieser Zellen über das Limit kommen würden
+    if (removed + affectedCells.length > cellsToRemove) continue;
+    
     // Speichere Werte aller betroffenen Zellen
     const savedValues = affectedCells.map(([r, c]) => puzzle[r][c]);
     
@@ -167,6 +168,9 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
     } else {
       // Zähle entfernte Zellen
       removed += affectedCells.length;
+      
+      // Stoppe wenn wir genug entfernt haben
+      if (removed >= cellsToRemove) break;
     }
   }
   
