@@ -135,52 +135,61 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
   positions.sort(() => Math.random() - 0.5);
   
   let removed = 0;
+  let attempts = 0;
+  const maxAttempts = 3; // Maximal 3 Durchläufe mit neu gemischten Positionen
   
   // Entferne Zahlen mit doppelter Achsen-Symmetrie (horizontal + vertikal)
-  for (const [row, col] of positions) {
-    // Berechne symmetrische Positionen (horizontal und vertikal gespiegelt)
-    const symRow = 8 - row;  // Horizontal gespiegelt
-    const symCol = 8 - col;  // Vertikal gespiegelt
-    
-    // Erstelle Set aller betroffenen Positionen (ohne Duplikate)
-    const affectedCells: [number, number][] = [];
-    const cellSet = new Set<string>();
-    
-    // Füge alle 4 symmetrischen Positionen hinzu
-    [[row, col], [symRow, col], [row, symCol], [symRow, symCol]].forEach(([r, c]) => {
-      const key = `${r},${c}`;
-      if (!cellSet.has(key)) {
-        cellSet.add(key);
-        affectedCells.push([r, c]);
-      }
-    });
-    
-    // Überspringe wenn bereits Zellen entfernt wurden
-    if (affectedCells.some(([r, c]) => puzzle[r][c] === 0)) continue;
-    
-    // Prüfe ob wir nach dem Entfernen dieser Zellen über das Limit kommen würden
-    if (removed + affectedCells.length > cellsToRemove) continue;
-    
-    // Speichere Werte aller betroffenen Zellen
-    const savedValues = affectedCells.map(([r, c]) => puzzle[r][c]);
-    
-    // Entferne alle symmetrischen Zahlen
-    affectedCells.forEach(([r, c]) => {
-      puzzle[r][c] = 0;
-    });
-    
-    // Prüfe ob Sudoku eindeutig lösbar bleibt
-    if (!hasUniqueSolution(puzzle)) {
-      // Stelle wieder her wenn nicht eindeutig
-      affectedCells.forEach(([r, c], idx) => {
-        puzzle[r][c] = savedValues[idx];
-      });
-    } else {
-      // Zähle entfernte Zellen
-      removed += affectedCells.length;
-      
-      // Stoppe wenn wir genug entfernt haben
+  while (removed < cellsToRemove && attempts < maxAttempts) {
+    for (const [row, col] of positions) {
       if (removed >= cellsToRemove) break;
+      
+      // Berechne symmetrische Positionen (horizontal und vertikal gespiegelt)
+      const symRow = 8 - row;  // Horizontal gespiegelt
+      const symCol = 8 - col;  // Vertikal gespiegelt
+      
+      // Erstelle Set aller betroffenen Positionen (ohne Duplikate)
+      const affectedCells: [number, number][] = [];
+      const cellSet = new Set<string>();
+      
+      // Füge alle 4 symmetrischen Positionen hinzu
+      [[row, col], [symRow, col], [row, symCol], [symRow, symCol]].forEach(([r, c]) => {
+        const key = `${r},${c}`;
+        if (!cellSet.has(key)) {
+          cellSet.add(key);
+          affectedCells.push([r, c]);
+        }
+      });
+      
+      // Überspringe wenn bereits Zellen entfernt wurden
+      if (affectedCells.some(([r, c]) => puzzle[r][c] === 0)) continue;
+      
+      // Prüfe ob wir nach dem Entfernen dieser Zellen über das Limit kommen würden
+      if (removed + affectedCells.length > cellsToRemove) continue;
+      
+      // Speichere Werte aller betroffenen Zellen
+      const savedValues = affectedCells.map(([r, c]) => puzzle[r][c]);
+      
+      // Entferne alle symmetrischen Zahlen
+      affectedCells.forEach(([r, c]) => {
+        puzzle[r][c] = 0;
+      });
+      
+      // Prüfe ob Sudoku eindeutig lösbar bleibt
+      if (!hasUniqueSolution(puzzle)) {
+        // Stelle wieder her wenn nicht eindeutig
+        affectedCells.forEach(([r, c], idx) => {
+          puzzle[r][c] = savedValues[idx];
+        });
+      } else {
+        // Zähle entfernte Zellen
+        removed += affectedCells.length;
+      }
+    }
+    
+    // Wenn wir nicht genug entfernt haben, mische neu und versuche erneut
+    if (removed < cellsToRemove) {
+      attempts++;
+      positions.sort(() => Math.random() - 0.5);
     }
   }
   
