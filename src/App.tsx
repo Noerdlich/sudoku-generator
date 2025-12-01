@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import SudokuBoard from './components/SudokuBoard';
+import MessageBox, { MessageType } from './components/MessageBox';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
 
 // Helper: Erstellt leeres 9x9 Grid
@@ -40,6 +41,7 @@ function App() {
   const [hintCooldown, setHintCooldown] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [customMode, setCustomMode] = useState(false);
+  const [message, setMessage] = useState<{ text: string; type: MessageType } | null>(null);
 
   // Cooldown Timer für Tipp-Button
   useEffect(() => {
@@ -134,7 +136,7 @@ function App() {
   const solveCustomPuzzle = useCallback(() => {
     // Validiere das Custom-Sudoku vor dem Lösen
     if (!validateGrid(customPuzzle)) {
-      alert('❌ Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.');
+      setMessage({ text: 'Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.', type: 'error' });
       return;
     }
     
@@ -144,9 +146,9 @@ function App() {
       setSolution(result.solution);
       setUserGrid(createEmptyGrid());
       setShowErrors(false);
-      alert('✅ Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.');
+      setMessage({ text: 'Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.', type: 'success' });
     } else {
-      alert('❌ Dieses Sudoku hat keine gültige Lösung. Bitte überprüfe deine Eingaben.');
+      setMessage({ text: 'Dieses Sudoku hat keine gültige Lösung. Bitte überprüfe deine Eingaben.', type: 'error' });
     }
   }, [customPuzzle]);
 
@@ -171,7 +173,7 @@ function App() {
     }
     
     if (emptyCells.length === 0) {
-      alert('⚠️ Alle korrekten Felder sind bereits ausgefüllt! Überprüfe falsche Eingaben (rot markiert).');
+      setMessage({ text: 'Alle korrekten Felder sind bereits ausgefüllt! Überprüfe falsche Eingaben (rot markiert).', type: 'warning' });
       return;
     }
     
@@ -244,7 +246,7 @@ function App() {
     });
     
     // Zeige Erklärung
-    alert(`💡 Tipp: ${hintNumber} an Position (Zeile ${rowLabel}, Spalte ${colLabel})\n\n${reasons[0]}`);
+    setMessage({ text: `Tipp: ${hintNumber} an Position (Zeile ${rowLabel}, Spalte ${colLabel}) – ${reasons[0]}`, type: 'info' });
     
     // Starte Cooldown
     setHintCooldown(20);
@@ -263,13 +265,13 @@ function App() {
       
       if (hasErrors) {
         setShowErrors(true);
-        alert('❌ Es gibt Regelverstöße! Die fehlerhaften Felder wurden rot markiert.');
+        setMessage({ text: 'Es gibt Regelverstöße! Die fehlerhaften Felder wurden rot markiert.', type: 'error' });
       } else if (isComplete) {
         setShowErrors(false);
-        alert('✅ Alle Zahlen sind bisher korrekt eingetragen! Das Sudoku ist vollständig.');
+        setMessage({ text: 'Alle Zahlen sind bisher korrekt eingetragen! Das Sudoku ist vollständig.', type: 'success' });
       } else {
         setShowErrors(false);
-        alert('✅ Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.');
+        setMessage({ text: 'Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', type: 'success' });
       }
       return;
     }
@@ -305,20 +307,20 @@ function App() {
     // Wenn es Regelverstöße gibt, zeige diese als Fehler
     if (hasRuleViolations) {
       setShowErrors(true);
-      alert('❌ Es gibt Regelverstöße (z.B. doppelte Zahlen in Zeile/Spalte/Block)! Die fehlerhaften Felder wurden rot markiert.');
+      setMessage({ text: 'Es gibt Regelverstöße (z.B. doppelte Zahlen in Zeile/Spalte/Block)! Die fehlerhaften Felder wurden rot markiert.', type: 'error' });
     } else if (complete && correct) {
       setShowErrors(false);
-      alert('🎉 Gratulation! Du hast das Sudoku richtig gelöst!');
+      setMessage({ text: 'Gratulation! Du hast das Sudoku richtig gelöst!', type: 'success' });
     } else if (hasErrors) {
       setShowErrors(true);
       if (complete) {
-        alert('❌ Falsche Felder wurden rot markiert. Korrigiere sie und versuche es erneut.');
+        setMessage({ text: 'Falsche Felder wurden rot markiert. Korrigiere sie und versuche es erneut.', type: 'error' });
       } else {
-        alert('⚠️ Einige Felder sind falsch (rot markiert) und das Sudoku ist noch nicht vollständig.');
+        setMessage({ text: 'Einige Felder sind falsch (rot markiert) und das Sudoku ist noch nicht vollständig.', type: 'warning' });
       }
     } else {
       setShowErrors(false);
-      alert('✅ Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.');
+      setMessage({ text: 'Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', type: 'success' });
     }
   }, [puzzle, userGrid, solution, customMode, customPuzzle]);
 
@@ -330,23 +332,24 @@ function App() {
       </header>
       
       <main className="App-main">
-        <div className="controls">
-          <div className="mode-toggle">
-            <button
-              className={`btn ${!customMode ? 'active' : ''}`}
-              onClick={() => !customMode ? null : toggleCustomMode()}
-              disabled={isGenerating || !customMode}
-            >
-              Generiertes Sudoku
-            </button>
-            <button
-              className={`btn ${customMode ? 'active' : ''}`}
-              onClick={() => customMode ? null : toggleCustomMode()}
-              disabled={isGenerating || customMode}
-            >
-              Eigenes Sudoku
-            </button>
-          </div>
+        <div className="game-area">
+          <div className="controls">
+            <div className="mode-toggle">
+              <button
+                className={`btn ${!customMode ? 'active' : ''}`}
+                onClick={() => !customMode ? null : toggleCustomMode()}
+                disabled={isGenerating || !customMode}
+              >
+                Generiertes Sudoku
+              </button>
+              <button
+                className={`btn ${customMode ? 'active' : ''}`}
+                onClick={() => customMode ? null : toggleCustomMode()}
+                disabled={isGenerating || customMode}
+              >
+                Eigenes Sudoku
+              </button>
+            </div>
 
           {!customMode && (
             <div className="difficulty-buttons">
@@ -461,17 +464,22 @@ function App() {
           )}
         </div>
         
-        <div className="info">
-          <p>
-            {customMode ? (
-              <><strong>Eigenes Sudoku:</strong> Gib deine Zahlen ein. Falsche Eingaben werden rot markiert. 
-              Klicke auf "Sudoku lösen", um die Lösung zu berechnen und Tipps zu erhalten.</>
-            ) : (
-              <><strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
-              Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
-              Falsche Felder werden rot markiert, wenn du auf "Prüfen" klickst.</>
-            )}
-          </p>
+          <div className="info">
+            <p>
+              {customMode ? (
+                <><strong>Eigenes Sudoku:</strong> Gib deine Zahlen ein. Falsche Eingaben werden rot markiert. 
+                Klicke auf "Sudoku lösen", um die Lösung zu berechnen und Tipps zu erhalten.</>
+              ) : (
+                <><strong>Hinweis:</strong> Graue Felder sind vorgegeben und können nicht geändert werden. 
+                Blaue Zahlen sind deine Eingaben. Nutze den Tipp-Button (💡), um eine korrekte Zahl einzufügen (20s Cooldown).
+                Falsche Felder werden rot markiert, wenn du auf "Prüfen" klickst.</>
+              )}
+            </p>
+          </div>
+        </div>
+        
+        <div className="message-area">
+          {message && <MessageBox message={message.text} type={message.type} />}
         </div>
       </main>
       

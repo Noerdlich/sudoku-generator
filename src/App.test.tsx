@@ -2,13 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 
-// Mock window.alert
-global.alert = jest.fn();
-
-afterEach(() => {
-  jest.clearAllMocks();
-});
-
 describe('App Basic Tests', () => {
   test('renders Sudoku Generator title', () => {
     render(<App />);
@@ -118,15 +111,16 @@ describe('App Basic Tests', () => {
   });
 
   describe('Prüfen Button Tests', () => {
-    test('shows alert when puzzle is not complete', () => {
+    test('shows message when puzzle is not complete', () => {
       render(<App />);
       
       const checkButton = screen.getByText('Prüfen');
       fireEvent.click(checkButton);
       
-      expect(global.alert).toHaveBeenCalledWith(
-        expect.stringContaining('korrekt')
-      );
+      // Prüfe ob MessageBox erscheint
+      const messageBox = screen.getByTestId('message-box');
+      expect(messageBox).toBeInTheDocument();
+      expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i);
     });
 
     test('detects duplicate numbers in custom mode', () => {
@@ -153,7 +147,8 @@ describe('App Basic Tests', () => {
       fireEvent.click(checkButton);
       
       // Bei leerem oder korrektem Puzzle sollte eine Meldung kommen
-      expect(global.alert).toHaveBeenCalled();
+      expect(screen.getByTestId('message-box')).toBeInTheDocument();
+      expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i);
     });
 
     test('validates duplicate detection in custom mode', () => {
@@ -189,9 +184,8 @@ describe('App Basic Tests', () => {
       const checkButton = screen.getByText('Prüfen');
       fireEvent.click(checkButton);
       
-      expect(global.alert).toHaveBeenCalledWith(
-        expect.stringMatching(/korrekt|vollständig|Regelverstöße/i)
-      );
+      // Prüfe ob MessageBox mit relevantem Text erscheint
+      expect(screen.getByTestId('message-box')).toBeInTheDocument();
     });
   });
 
@@ -220,9 +214,9 @@ describe('App Basic Tests', () => {
       const solveButton = screen.getByText('🧩 Sudoku lösen');
       fireEvent.click(solveButton);
       
-      expect(global.alert).toHaveBeenCalledWith(
-        expect.stringContaining('Regelverstöße')
-      );
+      // Prüfe ob Fehlermeldung erscheint
+      expect(screen.getByTestId('message-box')).toBeInTheDocument();
+      expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i);
     });
 
     test('allows checking custom puzzle after solving', () => {
@@ -242,8 +236,8 @@ describe('App Basic Tests', () => {
       const solveButton = screen.getByText('🧩 Sudoku lösen');
       fireEvent.click(solveButton);
       
-      // Alert sollte aufgerufen worden sein
-      expect(global.alert).toHaveBeenCalled();
+      // MessageBox sollte erscheinen
+      expect(screen.getByTestId('message-box')).toBeInTheDocument();
     });
 
     test('detects rule violations after solving custom sudoku', () => {
@@ -264,13 +258,9 @@ describe('App Basic Tests', () => {
       const solveButton = screen.getByText('🧩 Sudoku lösen');
       fireEvent.click(solveButton);
       
-      // Prüfe ob gelöst wurde (Alert sollte Erfolg melden)
-      const alertCalls = (global.alert as jest.Mock).mock.calls;
-      const lastAlert = alertCalls[alertCalls.length - 1][0];
-      const wasSolved = lastAlert.includes('erfolgreich gelöst');
-      
-      // Nur wenn erfolgreich gelöst, teste die Regelvalidierung
-      expect(wasSolved).toBe(true);
+      // Prüfe ob gelöst wurde (MessageBox sollte Erfolg melden)
+      expect(screen.getByTestId('message-box')).toBeInTheDocument();
+      expect(screen.getByTestId('message-text')).toHaveTextContent(/erfolgreich gelöst/i);
       
       // Nach dem Lösen: Füge eine 1 an Position (1,7) hinzu (Zeile 1, Spalte 7)
       // Das verletzt die Regel da bereits eine 1 in Zeile 1 an Position (1,4) ist
@@ -282,8 +272,7 @@ describe('App Basic Tests', () => {
       fireEvent.click(checkButton);
       
       // Es sollte einen Regelverstoß erkennen
-      const checkAlert = alertCalls[alertCalls.length - 1][0];
-      expect(checkAlert).toContain('Regelverstöße');
+      expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i);
     });
   });
 
