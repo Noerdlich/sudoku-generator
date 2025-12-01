@@ -279,6 +279,14 @@ function App() {
     
     const activePuzzle = customMode ? customPuzzle : puzzle;
     
+    // Erstelle kombiniertes Grid für Validierung
+    const combinedGrid: SudokuGrid = activePuzzle.map((row, i) =>
+      row.map((cell, j) => cell !== 0 ? cell : userGrid[i][j])
+    );
+    
+    // Prüfe auf Regelverstöße (wichtig für Custom Mode nach dem Lösen!)
+    const hasRuleViolations = !validateGrid(combinedGrid);
+    
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
         if (activePuzzle[i][j] === 0) {
@@ -292,7 +300,11 @@ function App() {
       }
     }
     
-    if (complete && correct) {
+    // Wenn es Regelverstöße gibt, zeige diese als Fehler
+    if (hasRuleViolations) {
+      setShowErrors(true);
+      alert('❌ Es gibt Regelverstöße (z.B. doppelte Zahlen in Zeile/Spalte/Block)! Die fehlerhaften Felder wurden rot markiert.');
+    } else if (complete && correct) {
       setShowErrors(false);
       alert('🎉 Gratulation! Du hast das Sudoku richtig gelöst!');
     } else if (hasErrors) {

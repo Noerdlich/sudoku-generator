@@ -244,6 +244,46 @@ describe('App Basic Tests', () => {
       // Alert sollte aufgerufen worden sein
       expect(global.alert).toHaveBeenCalled();
     });
+
+    test('detects rule violations after solving custom sudoku', () => {
+      render(<App />);
+      
+      const customButton = screen.getByText('Eigenes Sudoku');
+      fireEvent.click(customButton);
+      
+      const inputs = screen.getAllByRole('textbox');
+      
+      // Setze drei 1en an Positionen die ein lösbares Sudoku ergeben
+      // Position 0 = (0,0), Position 13 = (1,4), Position 26 = (2,8)
+      fireEvent.change(inputs[0], { target: { value: '1' } });  // (0,0)
+      fireEvent.change(inputs[13], { target: { value: '1' } }); // (1,4)
+      fireEvent.change(inputs[26], { target: { value: '1' } }); // (2,8)
+      
+      // Löse das Sudoku
+      const solveButton = screen.getByText('🧩 Sudoku lösen');
+      fireEvent.click(solveButton);
+      
+      // Prüfe ob gelöst wurde (Alert sollte Erfolg melden)
+      const alertCalls = (global.alert as jest.Mock).mock.calls;
+      const lastAlert = alertCalls[alertCalls.length - 1][0];
+      const wasSolved = lastAlert.includes('erfolgreich gelöst');
+      
+      // Nur wenn erfolgreich gelöst, teste die Regelvalidierung
+      expect(wasSolved).toBe(true);
+      
+      // Nach dem Lösen: Füge eine 1 an Position (1,7) hinzu (Zeile 1, Spalte 7)
+      // Das verletzt die Regel da bereits eine 1 in Zeile 1 an Position (1,4) ist
+      const position1_7 = inputs[16]; // Zeile 1 * 9 + Spalte 7 = 16
+      fireEvent.change(position1_7, { target: { value: '1' } });
+      
+      // Klicke auf Prüfen
+      const checkButton = screen.getByText('Prüfen');
+      fireEvent.click(checkButton);
+      
+      // Es sollte einen Regelverstoß erkennen
+      const checkAlert = alertCalls[alertCalls.length - 1][0];
+      expect(checkAlert).toContain('Regelverstöße');
+    });
   });
 
   describe('Input Validation Tests', () => {
