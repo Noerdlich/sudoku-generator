@@ -180,16 +180,17 @@ describe('App Basic Tests', () => {
       const inputs = screen.getAllByRole('textbox');
       const editableInputs = inputs.filter(i => !(i as HTMLInputElement).disabled);
       
-      // Setze eine gültige Zahl
+      // Nutze den Hint-Button um sicherzugehen, dass wir eine valide Zahl setzen
       if (editableInputs.length > 0) {
-        fireEvent.change(editableInputs[0], { target: { value: '1' } });
+        const hintButton = screen.getByText(/Tipp anzeigen/);
+        fireEvent.click(hintButton);
       }
       
       const checkButton = screen.getByText('Prüfen');
       fireEvent.click(checkButton);
       
       expect(global.alert).toHaveBeenCalledWith(
-        expect.stringMatching(/korrekt|vollständig|falsch/i)
+        expect.stringMatching(/korrekt|vollständig|Regelverstöße/i)
       );
     });
   });
