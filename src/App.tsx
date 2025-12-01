@@ -69,8 +69,10 @@ function App() {
   }, []);
 
   const handleCellChange = useCallback((row: number, col: number, value: number) => {
-    if (customMode) {
-      // Im Custom-Modus: Ändere das custom puzzle
+    const hasNonEmptySolution = solution.some(r => r.some(c => c !== 0));
+    
+    if (customMode && !hasNonEmptySolution) {
+      // Im Custom-Modus VOR dem Lösen: Ändere das custom puzzle
       setCustomPuzzle(prev => {
         const newGrid = prev.map(r => [...r]);
         newGrid[row][col] = value;
@@ -88,7 +90,7 @@ function App() {
         setShowErrors(false);
       }
     } else {
-      // Normaler Modus: Ändere userGrid
+      // Normaler Modus ODER Custom-Modus NACH dem Lösen: Ändere userGrid
       setUserGrid(prev => {
         const newGrid = prev.map(r => [...r]);
         newGrid[row][col] = value;
@@ -99,7 +101,7 @@ function App() {
         setShowErrors(false);
       }
     }
-  }, [showErrors, customMode, customPuzzle]);
+  }, [showErrors, customMode, customPuzzle, solution]);
 
   const handleReset = useCallback(() => {
     setUserGrid(createEmptyGrid());
