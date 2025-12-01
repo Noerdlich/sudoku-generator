@@ -43,6 +43,16 @@ function App() {
   const [customMode, setCustomMode] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: MessageType } | null>(null);
 
+  // Auto-hide message after 6 seconds
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        setMessage(null);
+      }, 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
   // Cooldown Timer für Tipp-Button
   useEffect(() => {
     if (hintCooldown > 0) {
