@@ -27,26 +27,30 @@
 .App-main {
   flex: 1;
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 2rem;
+  flex-direction: column;
+  align-items: center;
   padding: 2rem 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
+  position: relative;
 }
 
 .game-area {
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 0 1 600px;
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .message-area {
-  flex: 0 0 350px;
+  position: fixed;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 350px;
   padding: 1rem;
+  z-index: 10;
 }
 
 .controls {
@@ -59,21 +63,18 @@
 
 /* Mobile: Stack vertically */
 @media (max-width: 968px) {
-  .App-main {
-    flex-direction: column;
-    align-items: center;
-  }
-  
   .message-area {
+    position: static;
+    transform: none;
     width: 100%;
     max-width: 600px;
-    order: -1; /* Message above game on mobile */
-    flex: 1 1 auto;
+    margin-bottom: 1rem;
+    right: auto;
+    top: auto;
   }
   
-  .game-area {
-    width: 100%;
-    flex: 1 1 auto;
+  .App-main {
+    flex-direction: column-reverse; /* Message above game */
   }
 }
 
