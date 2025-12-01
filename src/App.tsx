@@ -3,16 +3,36 @@ import './App.css';
 import SudokuBoard from './components/SudokuBoard';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
 
+// Helper: Erstellt leeres 9x9 Grid
+const createEmptyGrid = (): SudokuGrid => Array(9).fill(null).map(() => Array(9).fill(0));
+
+// Helper: Validiert ein Grid mit isValidMove
+const validateGrid = (grid: SudokuGrid): boolean => {
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      const num = grid[i][j];
+      if (num === 0) continue;
+      
+      const tempGrid = grid.map((r, ri) => 
+        r.map((c, ci) => (ri === i && ci === j) ? 0 : c)
+      );
+      
+      if (!isValidMove(tempGrid, i, j, num)) {
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
 function App() {
   // Initialisiere puzzle und solution zusammen aus demselben generierten Sudoku
   const initialGame = generateSudoku('medium');
   
   const [puzzle, setPuzzle] = useState<SudokuGrid>(initialGame.puzzle);
   const [solution, setSolution] = useState<SudokuGrid>(initialGame.solution);
-  
-  const [userGrid, setUserGrid] = useState<SudokuGrid>(() =>
-    Array(9).fill(null).map(() => Array(9).fill(0))
-  );
+  const [userGrid, setUserGrid] = useState<SudokuGrid>(createEmptyGrid);
+  const [customPuzzle, setCustomPuzzle] = useState<SudokuGrid>(createEmptyGrid);
   
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [showSolution, setShowSolution] = useState(false);
@@ -20,9 +40,6 @@ function App() {
   const [hintCooldown, setHintCooldown] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
   const [customMode, setCustomMode] = useState(false);
-  const [customPuzzle, setCustomPuzzle] = useState<SudokuGrid>(() =>
-    Array(9).fill(null).map(() => Array(9).fill(0))
-  );
 
   // Cooldown Timer für Tipp-Button
   useEffect(() => {
@@ -45,7 +62,7 @@ function App() {
       const { puzzle: newPuzzle, solution: newSolution } = generateSudoku(diff);
       setPuzzle(newPuzzle);
       setSolution(newSolution);
-      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setUserGrid(createEmptyGrid());
       setDifficulty(diff);
       setIsGenerating(false);
     }, 100);
@@ -85,7 +102,7 @@ function App() {
   }, [showErrors, customMode, customPuzzle]);
 
   const handleReset = useCallback(() => {
-    setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+    setUserGrid(createEmptyGrid());
     setShowSolution(false);
     setShowErrors(false);
   }, []);
@@ -94,10 +111,10 @@ function App() {
     if (!customMode) {
       // Wechsel zu Custom-Modus
       setCustomMode(true);
-      setCustomPuzzle(Array(9).fill(null).map(() => Array(9).fill(0)));
-      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
-      setPuzzle(Array(9).fill(null).map(() => Array(9).fill(0)));
-      setSolution(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setCustomPuzzle(createEmptyGrid());
+      setUserGrid(createEmptyGrid());
+      setPuzzle(createEmptyGrid());
+      setSolution(createEmptyGrid());
       setShowErrors(false);
       setHintCooldown(0);
     } else {
@@ -106,7 +123,7 @@ function App() {
       const newGame = generateSudoku(difficulty);
       setPuzzle(newGame.puzzle);
       setSolution(newGame.solution);
-      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setUserGrid(createEmptyGrid());
       setShowErrors(false);
       setHintCooldown(0);
     }
@@ -114,49 +131,7 @@ function App() {
 
   const solveCustomPuzzle = useCallback(() => {
     // Validiere das Custom-Sudoku vor dem Lösen
-    let hasErrors = false;
-    
-    // Prüfe auf Duplikate
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        const num = customPuzzle[i][j];
-        if (num === 0) continue;
-        
-        // Prüfe Zeile auf Duplikate
-        for (let x = 0; x < 9; x++) {
-          if (x !== j && customPuzzle[i][x] === num) {
-            hasErrors = true;
-            break;
-          }
-        }
-        
-        // Prüfe Spalte auf Duplikate
-        for (let x = 0; x < 9; x++) {
-          if (x !== i && customPuzzle[x][j] === num) {
-            hasErrors = true;
-            break;
-          }
-        }
-        
-        // Prüfe 3x3 Block auf Duplikate
-        const startRow = Math.floor(i / 3) * 3;
-        const startCol = Math.floor(j / 3) * 3;
-        for (let r = startRow; r < startRow + 3; r++) {
-          for (let c = startCol; c < startCol + 3; c++) {
-            if ((r !== i || c !== j) && customPuzzle[r][c] === num) {
-              hasErrors = true;
-              break;
-            }
-          }
-          if (hasErrors) break;
-        }
-        
-        if (hasErrors) break;
-      }
-      if (hasErrors) break;
-    }
-    
-    if (hasErrors) {
+    if (!validateGrid(customPuzzle)) {
       alert('❌ Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.');
       return;
     }
@@ -165,7 +140,7 @@ function App() {
     if (result.solved) {
       setPuzzle(customPuzzle);
       setSolution(result.solution);
-      setUserGrid(Array(9).fill(null).map(() => Array(9).fill(0)));
+      setUserGrid(createEmptyGrid());
       setShowErrors(false);
       alert('✅ Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.');
     } else {
@@ -281,47 +256,8 @@ function App() {
         row.map((cell, j) => cell !== 0 ? cell : userGrid[i][j])
       );
       
-      let hasErrors = false;
-      let isComplete = true;
-      
-      // Prüfe jede Zelle auf Duplikate
-      outerLoop: for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-          const num = combinedGrid[i][j];
-          if (num === 0) {
-            isComplete = false;
-            continue;
-          }
-          
-          // Prüfe Zeile auf Duplikate
-          for (let x = 0; x < 9; x++) {
-            if (x !== j && combinedGrid[i][x] === num) {
-              hasErrors = true;
-              break outerLoop;
-            }
-          }
-          
-          // Prüfe Spalte auf Duplikate
-          for (let x = 0; x < 9; x++) {
-            if (x !== i && combinedGrid[x][j] === num) {
-              hasErrors = true;
-              break outerLoop;
-            }
-          }
-          
-          // Prüfe 3x3 Block auf Duplikate
-          const startRow = Math.floor(i / 3) * 3;
-          const startCol = Math.floor(j / 3) * 3;
-          for (let r = startRow; r < startRow + 3; r++) {
-            for (let c = startCol; c < startCol + 3; c++) {
-              if ((r !== i || c !== j) && combinedGrid[r][c] === num) {
-                hasErrors = true;
-                break outerLoop;
-              }
-            }
-          }
-        }
-      }
+      const hasErrors = !validateGrid(combinedGrid);
+      const isComplete = combinedGrid.every(row => row.every(cell => cell !== 0));
       
       if (hasErrors) {
         setShowErrors(true);
@@ -464,7 +400,7 @@ function App() {
             </div>
           )}
 
-          {customMode && puzzle.some(row => row.some(cell => cell !== 0)) && (
+          {(customMode && puzzle.some(row => row.some(cell => cell !== 0))) && (
             <div className="action-buttons">
               <button
                 className="btn btn-secondary"

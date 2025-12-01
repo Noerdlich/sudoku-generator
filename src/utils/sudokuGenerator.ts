@@ -218,10 +218,6 @@ export function generateSudoku(difficulty: 'easy' | 'medium' | 'hard' = 'medium'
     if (removed >= cellsToRemove) break;
   }
   
-  // Debug: Zähle tatsächlich vorgegebene Zahlen
-  const actualGiven = bestPuzzle.flat().filter(cell => cell !== 0).length;
-  console.log(`Schwierigkeit: ${difficulty}, Ziel entfernt: ${cellsToRemove}, Tatsächlich entfernt: ${bestRemoved}, Vorgegeben: ${actualGiven}, Versuche: ${totalAttempts}`);
-  
   return {
     puzzle: bestPuzzle,
     solution: bestSolution
