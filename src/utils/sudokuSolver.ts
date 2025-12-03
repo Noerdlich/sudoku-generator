@@ -764,3 +764,58 @@ export function findBoxLineReduction(grid: SudokuGrid): HintResult | null {
   // Keine Box Line Reduction gefunden, die zu einer Lösung führt
   return null;
 }
+
+/**
+ * Findet den nächsten logischen Schritt zur Lösung eines Sudoku-Puzzles.
+ * 
+ * Diese Hauptfunktion wendet verschiedene Lösungsstrategien in aufsteigender
+ * Schwierigkeit an, bis eine lösbare Zelle gefunden wird. Die Strategien
+ * werden in folgender Reihenfolge probiert:
+ * 
+ * 1. Naked Single (easy) - Schnellste und einfachste Strategie
+ * 2. Hidden Single (easy) - Ebenfalls einfach, aber aufwendiger zu finden
+ * 3. Naked Pair (medium) - Eliminiert Kandidaten durch Paare
+ * 4. Naked Triple (medium) - Eliminiert Kandidaten durch Tripel
+ * 5. Pointing Pairs (medium) - Block/Line Reduction
+ * 6. Box Line Reduction (medium) - Umgekehrte Pointing Pairs
+ * 
+ * Falls keine dieser Strategien einen Hinweis findet, wird null zurückgegeben.
+ * Die Strategien sind so implementiert, dass sie immer einen konkreten Wert
+ * für eine Zelle liefern, nicht nur Kandidaten-Eliminierungen.
+ * 
+ * @param grid Das aktuelle Sudoku-Spielfeld (9x9 Array mit 0 für leere Zellen)
+ * @returns HintResult mit Position, Wert und Erklärung oder null, wenn keine Strategie anwendbar ist
+ */
+export function findLogicalNextMove(grid: SudokuGrid): HintResult | null {
+  // Versuche zuerst die einfachsten Strategien (schnell und häufig)
+  
+  // 1. Naked Single - Zelle mit nur einem möglichen Kandidaten
+  let result = findNakedSingle(grid);
+  if (result) return result;
+  
+  // 2. Hidden Single - Zahl die in einer Einheit nur an einer Stelle passt
+  result = findHiddenSingle(grid);
+  if (result) return result;
+  
+  // Wenn die einfachen Strategien nicht funktionieren, versuche komplexere
+  
+  // 3. Naked Pair - Zwei Zellen mit identischen zwei Kandidaten
+  result = findNakedPair(grid);
+  if (result) return result;
+  
+  // 4. Naked Triple - Drei Zellen mit gemeinsamen drei Kandidaten
+  result = findNakedTriple(grid);
+  if (result) return result;
+  
+  // 5. Pointing Pairs - Kandidat im Block nur in einer Zeile/Spalte
+  result = findPointingPairs(grid);
+  if (result) return result;
+  
+  // 6. Box Line Reduction - Kandidat in Zeile/Spalte nur in einem Block
+  result = findBoxLineReduction(grid);
+  if (result) return result;
+  
+  // Keine Strategie hat einen Hinweis gefunden
+  // Das Puzzle ist entweder gelöst oder benötigt fortgeschrittenere Techniken
+  return null;
+}

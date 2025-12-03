@@ -3,6 +3,7 @@ import './App.css';
 import SudokuBoard from './components/SudokuBoard';
 import MessageBox, { MessageType } from './components/MessageBox';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
+import { findLogicalNextMove } from './utils/sudokuSolver';
 
 // Helper: Erstellt leeres 9x9 Grid
 const createEmptyGrid = (): SudokuGrid => Array(9).fill(null).map(() => Array(9).fill(0));
@@ -172,91 +173,61 @@ function App() {
       })
     );
     
-    // Finde alle leeren Zellen die noch korrekt ausgefüllt werden müssen
-    const emptyCells: [number, number][] = [];
-    for (let i = 0; i < 9; i++) {
-      for (let j = 0; j < 9; j++) {
-        if (currentGrid[i][j] === 0) {
-          emptyCells.push([i, j]);
-        }
-      }
-    }
+    // Prüfe ob es noch leere Zellen gibt
+    const hasEmptyCells = currentGrid.some(row => row.some(cell => cell === 0));
     
-    if (emptyCells.length === 0) {
+    if (!hasEmptyCells) {
       setMessage({ text: 'Alle korrekten Felder sind bereits ausgefüllt! Überprüfe falsche Eingaben (rot markiert).', type: 'warning' });
       return;
     }
     
-    // Wähle eine zufällige leere Zelle
-    const randomIndex = Math.floor(Math.random() * emptyCells.length);
-    const [row, col] = emptyCells[randomIndex];
-    const hintNumber = solution[row][col];
+    // Verwende logische Solver-Strategien um den nächsten Schritt zu finden
+    const hint = findLogicalNextMove(currentGrid);
     
-    // Erstelle Erklärung
-    const rowLabel = row + 1;
-    const colLabel = col + 1;
-    const blockRow = Math.floor(row / 3) + 1;
-    const blockCol = Math.floor(col / 3) + 1;
-    
-    // Prüfe Konflikte in Zeile, Spalte und Block
-    const reasons: string[] = [];
-    
-    // Prüfe Zeile
-    const rowNumbers = new Set<number>();
-    for (let c = 0; c < 9; c++) {
-      if (currentGrid[row][c] !== 0 && c !== col) rowNumbers.add(currentGrid[row][c]);
-    }
-    
-    // Prüfe Spalte
-    const colNumbers = new Set<number>();
-    for (let r = 0; r < 9; r++) {
-      if (currentGrid[r][col] !== 0 && r !== row) colNumbers.add(currentGrid[r][col]);
-    }
-    
-    // Prüfe 3x3 Block
-    const blockNumbers = new Set<number>();
-    const startRow = Math.floor(row / 3) * 3;
-    const startCol = Math.floor(col / 3) * 3;
-    for (let r = startRow; r < startRow + 3; r++) {
-      for (let c = startCol; c < startCol + 3; c++) {
-        if (currentGrid[r][c] !== 0 && (r !== row || c !== col)) {
-          blockNumbers.add(currentGrid[r][c]);
+    if (hint) {
+      // Füge die gefundene Zahl ein
+      setUserGrid(prev => {
+        const newGrid = prev.map(r => [...r]);
+        newGrid[hint.row][hint.col] = hint.value;
+        return newGrid;
+      });
+      
+      // Zeige die Strategie-Erklärung
+      const difficultyEmoji = hint.difficulty === 'easy' ? '💡' : 
+                             hint.difficulty === 'medium' ? '🧠' : '🎓';
+      setMessage({ 
+        text: `${difficultyEmoji} Tipp (${hint.strategy}): ${hint.explanation}`, 
+        type: 'info' 
+      });
+    } else {
+      // Fallback: Wenn keine logische Strategie gefunden wurde, zeige zufälligen korrekten Wert
+      // (Dies sollte sehr selten passieren, nur bei sehr schweren Puzzles)
+      const emptyCells: [number, number][] = [];
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          if (currentGrid[i][j] === 0) {
+            emptyCells.push([i, j]);
+          }
         }
       }
-    }
-    
-    // Erstelle Erklärung basierend auf Ausschlussverfahren
-    const missingInRow: number[] = [];
-    const missingInCol: number[] = [];
-    const missingInBlock: number[] = [];
-    
-    for (let n = 1; n <= 9; n++) {
-      if (!rowNumbers.has(n)) missingInRow.push(n);
-      if (!colNumbers.has(n)) missingInCol.push(n);
-      if (!blockNumbers.has(n)) missingInBlock.push(n);
-    }
-    
-    if (missingInRow.length === 1 || missingInCol.length === 1 || missingInBlock.length === 1) {
-      if (missingInRow.length === 1) {
-        reasons.push(`Letzte fehlende Zahl in Zeile ${rowLabel}`);
-      } else if (missingInCol.length === 1) {
-        reasons.push(`Letzte fehlende Zahl in Spalte ${colLabel}`);
-      } else if (missingInBlock.length === 1) {
-        reasons.push(`Letzte fehlende Zahl in Block ${blockRow}×${blockCol}`);
+      
+      if (emptyCells.length > 0) {
+        const randomIndex = Math.floor(Math.random() * emptyCells.length);
+        const [row, col] = emptyCells[randomIndex];
+        const hintNumber = solution[row][col];
+        
+        setUserGrid(prev => {
+          const newGrid = prev.map(r => [...r]);
+          newGrid[row][col] = hintNumber;
+          return newGrid;
+        });
+        
+        setMessage({ 
+          text: `💫 Tipp: ${hintNumber} in Zeile ${row + 1}, Spalte ${col + 1} (Fortgeschrittene Technik erforderlich)`, 
+          type: 'info' 
+        });
       }
-    } else {
-      reasons.push(`Einzige mögliche Zahl für Zeile ${rowLabel}, Spalte ${colLabel}`);
     }
-    
-    // Füge die korrekte Zahl ein
-    setUserGrid(prev => {
-      const newGrid = prev.map(r => [...r]);
-      newGrid[row][col] = hintNumber;
-      return newGrid;
-    });
-    
-    // Zeige Erklärung
-    setMessage({ text: `Tipp: ${hintNumber} an Position (Zeile ${rowLabel}, Spalte ${colLabel}) – ${reasons[0]}`, type: 'info' });
     
     // Starte Cooldown
     setHintCooldown(20);

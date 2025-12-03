@@ -16,6 +16,7 @@ import {
   findNakedTriple,
   findPointingPairs,
   findBoxLineReduction,
+  findLogicalNextMove,
   SudokuGrid,
 } from './sudokuSolver';
 
@@ -301,6 +302,120 @@ describe('sudokuSolver', () => {
       expect(result!.value).toBe(9);
       expect(result!.explanation.length).toBeGreaterThan(0);
       expect(['easy', 'medium', 'hard']).toContain(result!.difficulty);
+    });
+  });
+
+  // ========== Tests für findLogicalNextMove ==========
+  describe('findLogicalNextMove', () => {
+    test('sollte Naked Single bevorzugen wenn verfügbar', () => {
+      // Grid mit einem klaren Naked Single
+      const grid: SudokuGrid = [
+        [1, 2, 3, 0, 0, 0, 0, 0, 0],
+        [4, 5, 6, 0, 0, 0, 0, 0, 0],
+        [7, 8, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+      ];
+
+      const result = findLogicalNextMove(grid);
+      expect(result).not.toBeNull();
+      expect(result?.strategy).toBe('Naked Single');
+      expect(result?.row).toBe(2);
+      expect(result?.col).toBe(2);
+      expect(result?.value).toBe(9);
+    });
+
+    test('sollte null zurückgeben für leeres Grid', () => {
+      const grid: SudokuGrid = Array(9).fill(null).map(() => Array(9).fill(0));
+      const result = findLogicalNextMove(grid);
+      expect(result).toBeNull();
+    });
+
+    test('sollte null zurückgeben für vollständig gelöstes Grid', () => {
+      const grid: SudokuGrid = [
+        [5, 3, 4, 6, 7, 8, 9, 1, 2],
+        [6, 7, 2, 1, 9, 5, 3, 4, 8],
+        [1, 9, 8, 3, 4, 2, 5, 6, 7],
+        [8, 5, 9, 7, 6, 1, 4, 2, 3],
+        [4, 2, 6, 8, 5, 3, 7, 9, 1],
+        [7, 1, 3, 9, 2, 4, 8, 5, 6],
+        [9, 6, 1, 5, 3, 7, 2, 8, 4],
+        [2, 8, 7, 4, 1, 9, 6, 3, 5],
+        [3, 4, 5, 2, 8, 6, 1, 7, 9],
+      ];
+
+      const result = findLogicalNextMove(grid);
+      expect(result).toBeNull();
+    });
+
+    test('sollte einen Hinweis für teilweise gefülltes Grid finden', () => {
+      const grid: SudokuGrid = [
+        [5, 3, 0, 0, 7, 0, 0, 0, 0],
+        [6, 0, 0, 1, 9, 5, 0, 0, 0],
+        [0, 9, 8, 0, 0, 0, 0, 6, 0],
+        [8, 0, 0, 0, 6, 0, 0, 0, 3],
+        [4, 0, 0, 8, 0, 3, 0, 0, 1],
+        [7, 0, 0, 0, 2, 0, 0, 0, 6],
+        [0, 6, 0, 0, 0, 0, 2, 8, 0],
+        [0, 0, 0, 4, 1, 9, 0, 0, 5],
+        [0, 0, 0, 0, 8, 0, 0, 7, 9],
+      ];
+
+      const result = findLogicalNextMove(grid);
+      expect(result).not.toBeNull();
+      expect(result?.row).toBeGreaterThanOrEqual(0);
+      expect(result?.row).toBeLessThan(9);
+      expect(result?.col).toBeGreaterThanOrEqual(0);
+      expect(result?.col).toBeLessThan(9);
+      expect(result?.value).toBeGreaterThanOrEqual(1);
+      expect(result?.value).toBeLessThanOrEqual(9);
+      expect(result?.explanation).toBeTruthy();
+    });
+
+    test('sollte verschiedene Strategien anwenden können', () => {
+      // Sammle Ergebnisse von verschiedenen Puzzle-Zuständen
+      const grids = [
+        // Grid 1: Sollte Naked Single finden
+        [
+          [1, 2, 3, 0, 0, 0, 0, 0, 0],
+          [4, 5, 6, 0, 0, 0, 0, 0, 0],
+          [7, 8, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ],
+        // Grid 2: Komplexeres Puzzle
+        [
+          [5, 3, 0, 0, 7, 0, 0, 0, 0],
+          [6, 0, 0, 1, 9, 5, 0, 0, 0],
+          [0, 9, 8, 0, 0, 0, 0, 6, 0],
+          [8, 0, 0, 0, 6, 0, 0, 0, 3],
+          [4, 0, 0, 8, 0, 3, 0, 0, 1],
+          [7, 0, 0, 0, 2, 0, 0, 0, 6],
+          [0, 6, 0, 0, 0, 0, 2, 8, 0],
+          [0, 0, 0, 4, 1, 9, 0, 0, 5],
+          [0, 0, 0, 0, 8, 0, 0, 7, 9],
+        ],
+      ];
+
+      const strategies = new Set<string>();
+
+      grids.forEach((grid: number[][]) => {
+        const result = findLogicalNextMove(grid as SudokuGrid);
+        if (result) {
+          strategies.add(result.strategy);
+        }
+      });
+
+      // Mindestens eine Strategie sollte gefunden werden
+      expect(strategies.size).toBeGreaterThan(0);
     });
   });
 });
