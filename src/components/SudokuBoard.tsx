@@ -124,6 +124,8 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
               disabled={(!customMode && puzzle[row][col] !== 0) || showSolution}
               maxLength={1}
               inputMode="numeric"
+              aria-label={`Sudoku cell row ${row + 1} column ${col + 1}`}
+              title={`Enter number for row ${row + 1}, column ${col + 1}`}
             />
           ))}
         </div>

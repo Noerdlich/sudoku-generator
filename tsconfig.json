@@ -21,6 +21,5 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
-, "test/sudokuGenerator.test.ts", "test/App.test.tsx"  ]
+    "src"]
 }
