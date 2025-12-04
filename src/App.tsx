@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import SudokuBoard from './components/SudokuBoard';
 import MessageBox, { MessageType } from './components/MessageBox';
+import StrategyGuide from './components/StrategyGuide';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
 import { findLogicalNextMove } from './utils/sudokuSolver';
 import { 
@@ -242,9 +243,22 @@ function App() {
         return newGrid;
       });
       
-      // Zeige die Strategie-Erklärung
+      // Zeige die Strategie-Erklärung mit Link
       const difficultyEmoji = hint.difficulty === 'easy' ? '💡' : 
                              hint.difficulty === 'medium' ? '🧠' : '🎓';
+      
+      // Erstelle Link zur Strategie-Erklärung
+      const strategyId = hint.strategy.toLowerCase().replace(/\s+/g, '-');
+      const openStrategyLink = () => {
+        const event = new CustomEvent('openStrategy', { 
+          detail: { strategyId } 
+        });
+        window.dispatchEvent(event);
+      };
+      
+      // Speichere die Funktion als Callback
+      (window as any).openStrategyGuide = openStrategyLink;
+      
       setMessage({ 
         text: `${difficultyEmoji} Tipp (${hint.strategy}): ${hint.explanation}`, 
         type: 'info' 
@@ -349,6 +363,8 @@ function App() {
 
   return (
     <div className="App">
+      <StrategyGuide />
+      
       <header className="App-header">
         <h1>🎲 Sudoku Generator</h1>
         <p className="subtitle">Erstelle und löse symmetrische 9×9 Sudokus</p>
