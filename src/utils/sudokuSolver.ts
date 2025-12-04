@@ -1,7 +1,39 @@
 // Sudoku Solver, der verschiedene logische Lösungsstrategien implementiert
 // Diese Strategien werden verwendet, um dem Spieler intelligente Hinweise zu geben
 
+import { getRowCells, getColumnCells, getBlockCells } from './gridHelpers';
+
 export type SudokuGrid = number[][];
+
+/**
+ * Hilfsfunktion: Iteriert über alle Zeilen, Spalten und Blöcke und wendet
+ * eine Check-Funktion auf die Zellen-Gruppen an.
+ */
+function checkAllGroups(
+  checkFn: (cells: [number, number][]) => HintResult | null
+): HintResult | null {
+  // Prüfe alle Zeilen
+  for (let row = 0; row < 9; row++) {
+    const result = checkFn(getRowCells(row));
+    if (result) return result;
+  }
+  
+  // Prüfe alle Spalten
+  for (let col = 0; col < 9; col++) {
+    const result = checkFn(getColumnCells(col));
+    if (result) return result;
+  }
+  
+  // Prüfe alle Blöcke
+  for (let blockRow = 0; blockRow < 3; blockRow++) {
+    for (let blockCol = 0; blockCol < 3; blockCol++) {
+      const result = checkFn(getBlockCells(blockRow, blockCol));
+      if (result) return result;
+    }
+  }
+  
+  return null;
+}
 
 /**
  * Schnittstelle für ein Hinweis-Ergebnis.
@@ -329,42 +361,8 @@ export function findNakedPair(grid: SudokuGrid): HintResult | null {
     return null;
   };
   
-  // ========== Prüfe alle Zeilen ==========
-  for (let row = 0; row < 9; row++) {
-    const cells: [number, number][] = [];
-    for (let col = 0; col < 9; col++) {
-      cells.push([row, col]);
-    }
-    const result = checkGroup(cells);
-    if (result) return result;
-  }
-  
-  // ========== Prüfe alle Spalten ==========
-  for (let col = 0; col < 9; col++) {
-    const cells: [number, number][] = [];
-    for (let row = 0; row < 9; row++) {
-      cells.push([row, col]);
-    }
-    const result = checkGroup(cells);
-    if (result) return result;
-  }
-  
-  // ========== Prüfe alle Blöcke ==========
-  for (let blockRow = 0; blockRow < 3; blockRow++) {
-    for (let blockCol = 0; blockCol < 3; blockCol++) {
-      const cells: [number, number][] = [];
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          cells.push([blockRow * 3 + i, blockCol * 3 + j]);
-        }
-      }
-      const result = checkGroup(cells);
-      if (result) return result;
-    }
-  }
-  
-  // Kein Naked Pair gefunden, das zu einer Lösung führt
-  return null;
+  // Prüfe alle Zeilen, Spalten und Blöcke
+  return checkAllGroups(checkGroup);
 }
 
 /**
@@ -462,42 +460,8 @@ export function findNakedTriple(grid: SudokuGrid): HintResult | null {
     return null;
   };
   
-  // ========== Prüfe alle Zeilen ==========
-  for (let row = 0; row < 9; row++) {
-    const cells: [number, number][] = [];
-    for (let col = 0; col < 9; col++) {
-      cells.push([row, col]);
-    }
-    const result = checkGroup(cells);
-    if (result) return result;
-  }
-  
-  // ========== Prüfe alle Spalten ==========
-  for (let col = 0; col < 9; col++) {
-    const cells: [number, number][] = [];
-    for (let row = 0; row < 9; row++) {
-      cells.push([row, col]);
-    }
-    const result = checkGroup(cells);
-    if (result) return result;
-  }
-  
-  // ========== Prüfe alle Blöcke ==========
-  for (let blockRow = 0; blockRow < 3; blockRow++) {
-    for (let blockCol = 0; blockCol < 3; blockCol++) {
-      const cells: [number, number][] = [];
-      for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-          cells.push([blockRow * 3 + i, blockCol * 3 + j]);
-        }
-      }
-      const result = checkGroup(cells);
-      if (result) return result;
-    }
-  }
-  
-  // Kein Naked Triple gefunden, das zu einer Lösung führt
-  return null;
+  // Prüfe alle Zeilen, Spalten und Blöcke
+  return checkAllGroups(checkGroup);
 }
 
 /**

@@ -1,6 +1,7 @@
 import React from 'react';
 import './SudokuBoard.css';
 import { SudokuGrid } from '../utils/sudokuGenerator';
+import { createCombinedGrid, hasConflict } from '../utils/gridHelpers';
 
 interface SudokuBoardProps {
   puzzle: SudokuGrid;
@@ -31,32 +32,13 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   const isInvalidCell = (row: number, col: number): boolean => {
     if (!showErrors) return false;
     
-    // Erstelle kombiniertes Grid (Puzzle + User-Eingaben)
-    const combinedGrid: SudokuGrid = puzzle.map((r, i) =>
-      r.map((c, j) => c !== 0 ? c : userGrid[i][j])
-    );
-    
+    const combinedGrid = createCombinedGrid(puzzle, userGrid);
     const num = combinedGrid[row][col];
     if (num === 0) return false;
     
     // Prüfe auf Regelverstöße (Duplikate in Zeile/Spalte/Block)
-    // Prüfe Zeile
-    for (let c = 0; c < 9; c++) {
-      if (c !== col && combinedGrid[row][c] === num) return true;
-    }
-    
-    // Prüfe Spalte
-    for (let r = 0; r < 9; r++) {
-      if (r !== row && combinedGrid[r][col] === num) return true;
-    }
-    
-    // Prüfe 3x3 Block
-    const startRow = Math.floor(row / 3) * 3;
-    const startCol = Math.floor(col / 3) * 3;
-    for (let r = startRow; r < startRow + 3; r++) {
-      for (let c = startCol; c < startCol + 3; c++) {
-        if ((r !== row || c !== col) && combinedGrid[r][c] === num) return true;
-      }
+    if (hasConflict(combinedGrid, row, col, num)) {
+      return true;
     }
     
     // Zusätzlich: Wenn eine Lösung vorhanden ist, prüfe auch gegen diese

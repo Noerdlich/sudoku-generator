@@ -4,9 +4,13 @@ import SudokuBoard from './components/SudokuBoard';
 import MessageBox, { MessageType } from './components/MessageBox';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
 import { findLogicalNextMove } from './utils/sudokuSolver';
-
-// Helper: Erstellt leeres 9x9 Grid
-const createEmptyGrid = (): SudokuGrid => Array(9).fill(null).map(() => Array(9).fill(0));
+import { 
+  createEmptyGrid, 
+  createCombinedGrid, 
+  isGridComplete, 
+  isGridCorrect, 
+  isSolutionEmpty 
+} from './utils/gridHelpers';
 
 // Helper: Validiert ein Grid mit isValidMove
 const validateGrid = (grid: SudokuGrid): boolean => {
@@ -63,6 +67,51 @@ function App() {
       return () => clearTimeout(timer);
     }
   }, [hintCooldown]);
+
+  // Automatische Überprüfung wenn Sudoku vollständig ist
+  useEffect(() => {
+    // Timer für Verzögerung (Debouncing)
+    const timer = setTimeout(() => {
+      const combinedGrid = createCombinedGrid(puzzle, userGrid);
+      
+      if (isGridComplete(combinedGrid)) {
+        // Im Custom-Modus ohne Lösung: Nur Validierung
+        if (customMode && isSolutionEmpty(solution)) {
+          const isValid = validateGrid(combinedGrid);
+          if (isValid) {
+            setMessage({ 
+              text: '✅ Alle Zahlen sind korrekt platziert! Das Sudoku ist gültig.', 
+              type: 'success' 
+            });
+          } else {
+            setShowErrors(true);
+            setMessage({ 
+              text: '❌ Es gibt noch Regelverstöße. Überprüfe die rot markierten Felder.', 
+              type: 'error' 
+            });
+          }
+        } else {
+          // Normal-Modus oder Custom-Modus mit Lösung: Vergleiche mit solution
+          if (isGridCorrect(combinedGrid, solution)) {
+            setShowErrors(false);
+            setMessage({ 
+              text: '🎉 Herzlichen Glückwunsch! Du hast das Sudoku perfekt gelöst!', 
+              type: 'success' 
+            });
+          } else {
+            setShowErrors(true);
+            setMessage({ 
+              text: '❌ Fast geschafft! Einige Zahlen sind noch nicht korrekt.', 
+              type: 'error' 
+            });
+          }
+        }
+      }
+    }, 500); // Wartet 500ms nach letzter Eingabe
+    
+    // Cleanup: Löscht Timer wenn sich Abhängigkeiten ändern (User tippt weiter)
+    return () => clearTimeout(timer);
+  }, [puzzle, userGrid, solution, customMode]); // Läuft bei Änderung dieser Variablen
 
   const generateNewPuzzle = useCallback((diff: 'easy' | 'medium' | 'hard') => {
     setIsGenerating(true);
@@ -126,10 +175,11 @@ function App() {
     if (!customMode) {
       // Wechsel zu Custom-Modus
       setCustomMode(true);
-      setCustomPuzzle(createEmptyGrid());
-      setUserGrid(createEmptyGrid());
-      setPuzzle(createEmptyGrid());
-      setSolution(createEmptyGrid());
+      const emptyGrid = createEmptyGrid();
+      setCustomPuzzle(emptyGrid);
+      setUserGrid(emptyGrid);
+      setPuzzle(emptyGrid);
+      setSolution(emptyGrid);
       setShowErrors(false);
       setHintCooldown(0);
     } else {
@@ -235,14 +285,10 @@ function App() {
 
   const checkSolution = useCallback(() => {
     // Im Custom-Modus: Wenn noch keine Lösung vorhanden ist, prüfe nur Validität
-    if (customMode && solution.every(row => row.every(cell => cell === 0))) {
-      // Erstelle ein kombiniertes Grid aus customPuzzle und userGrid
-      const combinedGrid: SudokuGrid = customPuzzle.map((row, i) =>
-        row.map((cell, j) => cell !== 0 ? cell : userGrid[i][j])
-      );
-      
+    if (customMode && isSolutionEmpty(solution)) {
+      const combinedGrid = createCombinedGrid(customPuzzle, userGrid);
       const hasErrors = !validateGrid(combinedGrid);
-      const isComplete = combinedGrid.every(row => row.every(cell => cell !== 0));
+      const isComplete = isGridComplete(combinedGrid);
       
       if (hasErrors) {
         setShowErrors(true);
@@ -263,11 +309,7 @@ function App() {
     let hasErrors = false;
     
     const activePuzzle = customMode ? customPuzzle : puzzle;
-    
-    // Erstelle kombiniertes Grid für Validierung
-    const combinedGrid: SudokuGrid = activePuzzle.map((row, i) =>
-      row.map((cell, j) => cell !== 0 ? cell : userGrid[i][j])
-    );
+    const combinedGrid = createCombinedGrid(activePuzzle, userGrid);
     
     // Prüfe auf Regelverstöße (wichtig für Custom Mode nach dem Lösen!)
     const hasRuleViolations = !validateGrid(combinedGrid);
