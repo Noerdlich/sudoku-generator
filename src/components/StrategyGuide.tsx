@@ -138,12 +138,16 @@ const StrategyGuide: React.FC = () => {
         className={`strategy-guide-toggle ${isOpen ? 'open' : ''}`}
         onClick={toggleGuide}
         aria-label="Strategien Guide öffnen/schließen"
+        data-testid="strategy-guide-toggle"
       >
         <span className="icon">📚</span>
         <span className="text">Lösungsstrategien</span>
       </button>
 
-      <div className={`strategy-guide-panel ${isOpen ? 'open' : ''}`}>
+      <div 
+        className={`strategy-guide-panel ${isOpen ? 'open' : ''}`}
+        data-testid="strategy-guide-panel"
+      >
         <div className="strategy-guide-header">
           <h2>🎓 Sudoku Lösungsstrategien</h2>
           <button 
@@ -215,7 +219,13 @@ const StrategyGuide: React.FC = () => {
         </div>
       </div>
 
-      {isOpen && <div className="strategy-guide-overlay" onClick={toggleGuide} />}
+      {isOpen && (
+        <div 
+          className="strategy-guide-overlay" 
+          onClick={toggleGuide}
+          data-testid="strategy-guide-overlay"
+        />
+      )}
     </>
   );
 };

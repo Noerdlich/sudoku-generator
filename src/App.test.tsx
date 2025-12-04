@@ -23,9 +23,9 @@ describe('App Basic Tests', () => {
 
   test('renders difficulty buttons', () => {
     render(<App />);
-    expect(screen.getByText('Leicht')).toBeInTheDocument();
-    expect(screen.getByText('Mittel')).toBeInTheDocument();
-    expect(screen.getByText('Schwer')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Leicht' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Mittel' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Schwer' })).toBeInTheDocument();
   });
 
   test('renders mode toggle buttons', () => {
