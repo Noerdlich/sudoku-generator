@@ -290,7 +290,10 @@
   margin: 0;
   padding-left: 20px;
   color: #555;
-  font-size: 1- Panel von unten auf Mobile */
+  font-size: 14px;
+}
+
+/* Panel von unten auf Mobile */
 @media (max-width: 768px) {
   .strategy-guide-panel {
     width: 100%;
@@ -309,7 +312,11 @@
   }
   
   .strategy-guide-header {
-    border-radius: 16px 16px 0 0hild {
+    border-radius: 16px 16px 0 0;
+  }
+}
+
+.strategy-guide-header > *:last-child {
   margin-bottom: 0;
 }
 
