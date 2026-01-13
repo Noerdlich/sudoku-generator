@@ -30,13 +30,6 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   candidates,
   notesMode
 }) => {
-  const handleInputChange = (row: number, col: number, value: string) => {
-    const num = value === '' ? 0 : parseInt(value, 10);
-    if (value === '' || (num >= 1 && num <= 9)) {
-      onCellChange(row, col, num);
-    }
-  };
-
   const isInvalidCell = (row: number, col: number): boolean => {
     if (!showErrors) return false;
     
