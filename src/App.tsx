@@ -162,7 +162,7 @@ function App() {
     
     // Cleanup: Löscht Timer wenn sich Abhängigkeiten ändern (User tippt weiter)
     return () => clearTimeout(timer);
-  }, [puzzle, userGrid, solution, customMode]); // Läuft bei Änderung dieser Variablen
+  }, [puzzle, userGrid, solution, customMode, showMessage]); // Läuft bei Änderung dieser Variablen
 
   const generateNewPuzzle = useCallback((diff: 'easy' | 'medium' | 'hard') => {
     setIsGenerating(true);
@@ -470,7 +470,7 @@ function App() {
     
     // Starte Cooldown
     setHintCooldown(20);
-  }, [puzzle, userGrid, solution]);
+  }, [puzzle, userGrid, solution, showMessage]);
 
   const handleCellSelect = useCallback((row: number, col: number) => {
     setSelectedCell({ row, col });
