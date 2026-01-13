@@ -210,6 +210,13 @@ function App() {
           }
           return newCandidates;
         });
+      } else if (notesMode && value === 0) {
+        // Notizen-Modus + Delete: Lösche alle Kandidaten dieser Zelle
+        setCandidates(prev => {
+          const newCandidates = prev.map(r => r.map(c => new Set(c)));
+          newCandidates[row][col].clear();
+          return newCandidates;
+        });
       } else {
         // Normal-Modus: Setze Zahl und lösche Kandidaten
         setUserGrid(prev => {
@@ -217,11 +224,32 @@ function App() {
           newGrid[row][col] = value;
           return newGrid;
         });
-        // Lösche Kandidaten für diese Zelle
+        // Lösche Kandidaten für diese Zelle und entferne diese Zahl aus Zeile/Spalte/Block
         if (value !== 0) {
           setCandidates(prev => {
             const newCandidates = prev.map(r => r.map(c => new Set(c)));
+            // Lösche Kandidaten der aktuellen Zelle
             newCandidates[row][col].clear();
+            
+            // Entferne diese Zahl aus allen Kandidaten in der Zeile
+            for (let c = 0; c < 9; c++) {
+              newCandidates[row][c].delete(value);
+            }
+            
+            // Entferne diese Zahl aus allen Kandidaten in der Spalte
+            for (let r = 0; r < 9; r++) {
+              newCandidates[r][col].delete(value);
+            }
+            
+            // Entferne diese Zahl aus allen Kandidaten im 3x3 Block
+            const blockRow = Math.floor(row / 3) * 3;
+            const blockCol = Math.floor(col / 3) * 3;
+            for (let r = blockRow; r < blockRow + 3; r++) {
+              for (let c = blockCol; c < blockCol + 3; c++) {
+                newCandidates[r][c].delete(value);
+              }
+            }
+            
             return newCandidates;
           });
         }
@@ -614,17 +642,6 @@ function App() {
           ⏱️ Zeit: {formatTime(elapsedTime)}
         </div>
         
-        <div className="notes-toggle-container">
-          <button
-            className={`btn btn-notes ${notesMode ? 'active' : ''}`}
-            onClick={() => setNotesMode(!notesMode)}
-            disabled={isGenerating || showSolution || customMode}
-            title={notesMode ? 'Notizen deaktivieren' : 'Notizen aktivieren'}
-          >
-            {notesMode ? '✏️ Notizen aktiv' : '📝 Notizen'}
-          </button>
-        </div>
-        
         <div className="board-container">
           {isGenerating ? (
             <div className="loading">
@@ -646,6 +663,22 @@ function App() {
                 candidates={candidates}
                 notesMode={notesMode}
               />
+              
+              <div className="notes-toggle-slider">
+                <label className="toggle-label">
+                  <span className="toggle-text">Notizen-Modus</span>
+                  <div className="toggle-switch">
+                    <input
+                      type="checkbox"
+                      checked={notesMode}
+                      onChange={() => setNotesMode(!notesMode)}
+                      disabled={isGenerating || showSolution || customMode}
+                    />
+                    <span className="slider"></span>
+                  </div>
+                </label>
+              </div>
+              
               <NumberKeyboard
                 onNumberClick={handleNumberClick}
                 onDelete={handleDelete}
