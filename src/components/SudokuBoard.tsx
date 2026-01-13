@@ -13,6 +13,8 @@ interface SudokuBoardProps {
   customMode?: boolean;
   selectedCell: { row: number; col: number } | null;
   onCellSelect: (row: number, col: number) => void;
+  candidates: Set<number>[][];
+  notesMode: boolean;
 }
 
 const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -24,7 +26,9 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   showErrors,
   customMode = false,
   selectedCell,
-  onCellSelect
+  onCellSelect,
+  candidates,
+  notesMode
 }) => {
   const handleInputChange = (row: number, col: number, value: string) => {
     const num = value === '' ? 0 : parseInt(value, 10);
@@ -101,25 +105,50 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
     return '';
   };
 
+  const renderCellContent = (row: number, col: number) => {
+    const cellValue = displayValue(row, col);
+    const cellCandidates = candidates[row][col];
+    
+    // Wenn eine normale Zahl vorhanden ist, zeige diese
+    if (cellValue) {
+      return cellValue;
+    }
+    
+    // Wenn Kandidaten vorhanden sind, zeige diese im 3x3 Grid
+    if (cellCandidates.size > 0) {
+      return (
+        <div className="candidates-grid">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+            <span 
+              key={num} 
+              className={`candidate ${cellCandidates.has(num) ? 'visible' : ''}`}
+            >
+              {cellCandidates.has(num) ? num : ''}
+            </span>
+          ))}
+        </div>
+      );
+    }
+    
+    return '';
+  };
+
   return (
     <div className="sudoku-board">
       {Array.from({ length: 9 }, (_, row) => (
         <div key={row} className="row">
           {Array.from({ length: 9 }, (_, col) => (
-            <input
+            <button
               key={`${row}-${col}`}
-              type="text"
               className={getCellClassName(row, col)}
-              value={displayValue(row, col)}
-              onChange={(e) => handleInputChange(row, col, e.target.value)}
               onClick={() => onCellSelect(row, col)}
-              onFocus={() => onCellSelect(row, col)}
-              disabled={(!customMode && puzzle[row][col] !== 0) || showSolution}
-              maxLength={1}
-              inputMode="none"
-              aria-label={`Sudoku cell row ${row + 1} column ${col + 1}`}
+              disabled={puzzle[row][col] !== 0}
+              aria-label={`cell-${row}-${col}`}
               title={`Enter number for row ${row + 1}, column ${col + 1}`}
-            />
+              type="button"
+            >
+              {renderCellContent(row, col)}
+            </button>
           ))}
         </div>
       ))}

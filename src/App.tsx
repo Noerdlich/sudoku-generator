@@ -33,6 +33,13 @@ const validateGrid = (grid: SudokuGrid): boolean => {
   return true;
 };
 
+// Helper: Erstellt leeres Kandidaten-Grid
+const createEmptyCandidates = (): Set<number>[][] => {
+  return Array(9).fill(null).map(() => 
+    Array(9).fill(null).map(() => new Set<number>())
+  );
+};
+
 function App() {
   // Initialisiere puzzle und solution zusammen aus demselben generierten Sudoku
   const initialGame = generateSudoku('medium');
@@ -52,6 +59,8 @@ function App() {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const [notesMode, setNotesMode] = useState(false);
+  const [candidates, setCandidates] = useState<Set<number>[][]>(createEmptyCandidates);
 
   // Timer für Lösungszeit (max 99:59:59)
   useEffect(() => {
@@ -154,6 +163,7 @@ function App() {
     setShowErrors(false);
     setElapsedTime(0);
     setIsTimerRunning(true);
+    setCandidates(createEmptyCandidates());
     
     // Kleine Verzögerung für bessere UX
     setTimeout(() => {
@@ -188,18 +198,40 @@ function App() {
         setShowErrors(false);
       }
     } else {
-      // Normaler Modus ODER Custom-Modus NACH dem Lösen: Ändere userGrid
-      setUserGrid(prev => {
-        const newGrid = prev.map(r => [...r]);
-        newGrid[row][col] = value;
-        return newGrid;
-      });
+      // Normaler Modus ODER Custom-Modus NACH dem Lösen
+      if (notesMode && value !== 0) {
+        // Notizen-Modus: Kandidaten hinzufügen/entfernen (Toggle)
+        setCandidates(prev => {
+          const newCandidates = prev.map(r => r.map(c => new Set(c)));
+          if (newCandidates[row][col].has(value)) {
+            newCandidates[row][col].delete(value);
+          } else {
+            newCandidates[row][col].add(value);
+          }
+          return newCandidates;
+        });
+      } else {
+        // Normal-Modus: Setze Zahl und lösche Kandidaten
+        setUserGrid(prev => {
+          const newGrid = prev.map(r => [...r]);
+          newGrid[row][col] = value;
+          return newGrid;
+        });
+        // Lösche Kandidaten für diese Zelle
+        if (value !== 0) {
+          setCandidates(prev => {
+            const newCandidates = prev.map(r => r.map(c => new Set(c)));
+            newCandidates[row][col].clear();
+            return newCandidates;
+          });
+        }
+      }
       // Setze Fehleranzeige zurück wenn Benutzer etwas ändert
       if (showErrors) {
         setShowErrors(false);
       }
     }
-  }, [showErrors, customMode, customPuzzle, solution]);
+  }, [showErrors, customMode, customPuzzle, solution, notesMode]);
 
   const handleReset = useCallback(() => {
     setUserGrid(createEmptyGrid());
@@ -207,6 +239,7 @@ function App() {
     setShowErrors(false);
     setElapsedTime(0);
     setIsTimerRunning(true);
+    setCandidates(createEmptyCandidates());
   }, []);
 
   const toggleCustomMode = useCallback(() => {
@@ -222,6 +255,7 @@ function App() {
       setHintCooldown(0);
       setElapsedTime(0);
       setIsTimerRunning(true);
+      setCandidates(createEmptyCandidates());
     } else {
       // Zurück zum normalen Modus
       setCustomMode(false);
@@ -233,6 +267,7 @@ function App() {
       setHintCooldown(0);
       setElapsedTime(0);
       setIsTimerRunning(true);
+      setCandidates(createEmptyCandidates());
     }
   }, [customMode, difficulty]);
 
@@ -282,6 +317,13 @@ function App() {
         const newGrid = prev.map(r => [...r]);
         newGrid[hint.row][hint.col] = hint.value;
         return newGrid;
+      });
+      
+      // Lösche Kandidaten für diese Zelle
+      setCandidates(prev => {
+        const newCandidates = prev.map(r => r.map(c => new Set(c)));
+        newCandidates[hint.row][hint.col].clear();
+        return newCandidates;
       });
       
       // Zeige die Strategie-Erklärung mit Link
@@ -572,6 +614,17 @@ function App() {
           ⏱️ Zeit: {formatTime(elapsedTime)}
         </div>
         
+        <div className="notes-toggle-container">
+          <button
+            className={`btn btn-notes ${notesMode ? 'active' : ''}`}
+            onClick={() => setNotesMode(!notesMode)}
+            disabled={isGenerating || showSolution || customMode}
+            title={notesMode ? 'Notizen deaktivieren' : 'Notizen aktivieren'}
+          >
+            {notesMode ? '✏️ Notizen aktiv' : '📝 Notizen'}
+          </button>
+        </div>
+        
         <div className="board-container">
           {isGenerating ? (
             <div className="loading">
@@ -590,6 +643,8 @@ function App() {
                 customMode={customMode}
                 selectedCell={selectedCell}
                 onCellSelect={handleCellSelect}
+                candidates={candidates}
+                notesMode={notesMode}
               />
               <NumberKeyboard
                 onNumberClick={handleNumberClick}

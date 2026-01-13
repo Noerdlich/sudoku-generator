@@ -205,6 +205,28 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.notes-toggle-container {
+  display: flex;
+  justify-content: flex-end;
+  max-width: 600px;
+  width: 100%;
+  margin: 0.5rem 0;
+}
+
+.btn-notes {
+  background-color: #8b5cf6;
+  color: white;
+}
+
+.btn-notes:hover:not(:disabled) {
+  background-color: #7c3aed;
+}
+
+.btn-notes.active {
+  background-color: #6d28d9;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .info {
   margin-top: 2rem;
   padding: 1rem 2rem;
