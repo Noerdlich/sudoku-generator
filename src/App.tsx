@@ -51,12 +51,12 @@ function App() {
   const [message, setMessage] = useState<{ text: string; type: MessageType } | null>(null);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
 
-  // Auto-hide message after 6 seconds
+  // Auto-hide message after 20 seconds
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
         setMessage(null);
-      }, 6000);
+      }, 20000);
       return () => clearTimeout(timer);
     }
   }, [message]);
