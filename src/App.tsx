@@ -50,6 +50,25 @@ function App() {
   const [customMode, setCustomMode] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: MessageType } | null>(null);
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(true);
+
+  // Timer für Lösungszeit
+  useEffect(() => {
+    if (isTimerRunning) {
+      const interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isTimerRunning]);
+
+  // Formatiere Zeit in MM:SS
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Auto-hide message after 20 seconds
   useEffect(() => {
@@ -97,6 +116,7 @@ function App() {
           // Normal-Modus oder Custom-Modus mit Lösung: Vergleiche mit solution
           if (isGridCorrect(combinedGrid, solution)) {
             setShowErrors(false);
+            setIsTimerRunning(false);
             setMessage({ 
               text: '🎉 Herzlichen Glückwunsch! Du hast das Sudoku perfekt gelöst!', 
               type: 'success' 
@@ -121,6 +141,8 @@ function App() {
     setShowSolution(false);
     setHintCooldown(0);
     setShowErrors(false);
+    setElapsedTime(0);
+    setIsTimerRunning(true);
     
     // Kleine Verzögerung für bessere UX
     setTimeout(() => {
@@ -172,6 +194,8 @@ function App() {
     setUserGrid(createEmptyGrid());
     setShowSolution(false);
     setShowErrors(false);
+    setElapsedTime(0);
+    setIsTimerRunning(true);
   }, []);
 
   const toggleCustomMode = useCallback(() => {
@@ -185,6 +209,8 @@ function App() {
       setSolution(emptyGrid);
       setShowErrors(false);
       setHintCooldown(0);
+      setElapsedTime(0);
+      setIsTimerRunning(true);
     } else {
       // Zurück zum normalen Modus
       setCustomMode(false);
@@ -194,6 +220,8 @@ function App() {
       setUserGrid(createEmptyGrid());
       setShowErrors(false);
       setHintCooldown(0);
+      setElapsedTime(0);
+      setIsTimerRunning(true);
     }
   }, [customMode, difficulty]);
 
@@ -555,6 +583,10 @@ function App() {
               />
             </>
           )}
+        </div>
+        
+        <div className="timer-display">
+          ⏱️ Zeit: {formatTime(elapsedTime)}
         </div>
         
           <div className="info">

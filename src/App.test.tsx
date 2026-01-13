@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import App from './App';
 
 describe('App Basic Tests', () => {
@@ -449,6 +449,151 @@ describe('App Basic Tests', () => {
       fireEvent.click(button4);
       
       expect((inputs[0] as HTMLInputElement).value).toBe('4');
+    });
+  });
+
+  describe('Timer functionality', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    test('renders timer display', () => {
+      render(<App />);
+      expect(screen.getByText(/⏱️ Zeit:/i)).toBeInTheDocument();
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+    });
+
+    test('timer starts at 00:00', () => {
+      render(<App />);
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+    });
+
+    test('timer increments after 1 second', () => {
+      render(<App />);
+      
+      // Timer sollte bei 00:00 starten
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+      
+      // Warte 1 Sekunde
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+      
+      // Timer sollte jetzt 00:01 anzeigen
+      expect(screen.getByText(/00:01/)).toBeInTheDocument();
+    });
+
+    test('timer continues counting after multiple seconds', () => {
+      render(<App />);
+      
+      // Starte bei 00:00
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+      
+      // Warte 10 Sekunden
+      act(() => {
+        jest.advanceTimersByTime(10000);
+      });
+      
+      expect(screen.getByText(/00:10/)).toBeInTheDocument();
+    });
+
+    test('timer shows correct format for minutes', () => {
+      render(<App />);
+      
+      // Warte 65 Sekunden (1 Minute und 5 Sekunden)
+      act(() => {
+        jest.advanceTimersByTime(65000);
+      });
+      
+      expect(screen.getByText(/01:05/)).toBeInTheDocument();
+    });
+
+    test('timer resets when clicking reset button', () => {
+      render(<App />);
+      
+      // Lasse Timer laufen
+      act(() => {
+        jest.advanceTimersByTime(30000); // 30 Sekunden
+      });
+      expect(screen.getByText(/00:30/)).toBeInTheDocument();
+      
+      // Klicke Reset
+      const resetButton = screen.getByText('Zurücksetzen');
+      fireEvent.click(resetButton);
+      
+      // Timer sollte zurückgesetzt sein
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+    });
+
+    test('timer resets when generating new puzzle', async () => {
+      render(<App />);
+      
+      // Lasse Timer laufen
+      act(() => {
+        jest.advanceTimersByTime(20000); // 20 Sekunden
+      });
+      expect(screen.getByText(/00:20/)).toBeInTheDocument();
+      
+      // Generiere neues Puzzle
+      const easyButton = screen.getByRole('button', { name: 'Leicht' });
+      fireEvent.click(easyButton);
+      
+      await waitFor(() => {
+        expect(screen.getByText(/00:00/)).toBeInTheDocument();
+      });
+    });
+
+    test('timer resets when switching to custom mode', () => {
+      render(<App />);
+      
+      // Lasse Timer laufen
+      act(() => {
+        jest.advanceTimersByTime(15000); // 15 Sekunden
+      });
+      expect(screen.getByText(/00:15/)).toBeInTheDocument();
+      
+      // Wechsle zu Custom-Modus
+      const customButton = screen.getByText('Eigenes Sudoku');
+      fireEvent.click(customButton);
+      
+      // Timer sollte zurückgesetzt sein
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+    });
+
+    test('timer resets when switching back to normal mode', () => {
+      render(<App />);
+      
+      // Wechsle zu Custom-Modus
+      const customButton = screen.getByText('Eigenes Sudoku');
+      fireEvent.click(customButton);
+      
+      // Lasse Timer laufen
+      act(() => {
+        jest.advanceTimersByTime(25000); // 25 Sekunden
+      });
+      expect(screen.getByText(/00:25/)).toBeInTheDocument();
+      
+      // Wechsle zurück zu Normal-Modus
+      const normalButton = screen.getByText('Generiertes Sudoku');
+      fireEvent.click(normalButton);
+      
+      // Timer sollte zurückgesetzt sein
+      expect(screen.getByText(/00:00/)).toBeInTheDocument();
+    });
+
+    test('timer formats double-digit minutes correctly', () => {
+      render(<App />);
+      
+      // Warte 10 Minuten und 30 Sekunden
+      act(() => {
+        jest.advanceTimersByTime(630000);
+      });
+      
+      expect(screen.getByText(/10:30/)).toBeInTheDocument();
     });
   });
 });
