@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import SudokuBoard from './components/SudokuBoard';
+import NumberKeyboard from './components/NumberKeyboard';
 import MessageBox, { MessageType } from './components/MessageBox';
 import StrategyGuide from './components/StrategyGuide';
 import { generateSudoku, SudokuGrid, solveSudoku, isValidMove } from './utils/sudokuGenerator';
@@ -48,6 +49,7 @@ function App() {
   const [showErrors, setShowErrors] = useState(false);
   const [customMode, setCustomMode] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: MessageType } | null>(null);
+  const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null);
 
   // Auto-hide message after 6 seconds
   useEffect(() => {
@@ -297,6 +299,49 @@ function App() {
     setHintCooldown(20);
   }, [puzzle, userGrid, solution]);
 
+  const handleCellSelect = useCallback((row: number, col: number) => {
+    setSelectedCell({ row, col });
+  }, []);
+
+  const handleNumberClick = useCallback((num: number) => {
+    if (!selectedCell) return;
+    
+    const { row, col } = selectedCell;
+    
+    // Im normalen Modus: Prüfe ob Zelle vorgegeben ist
+    if (!customMode && puzzle[row][col] !== 0) {
+      return; // Vorgefertigte Zellen können nicht geändert werden
+    }
+    
+    // Im Custom-Modus vor dem Lösen: Alle Zellen editierbar
+    // Im Custom-Modus nach dem Lösen: Nur nicht-vorgefertigte Zellen editierbar
+    const hasNonEmptySolution = solution.some(r => r.some(c => c !== 0));
+    if (customMode && hasNonEmptySolution && puzzle[row][col] !== 0) {
+      return; // Nach dem Lösen: Vorgefertigte Zellen nicht änderbar
+    }
+    
+    handleCellChange(row, col, num);
+  }, [selectedCell, customMode, puzzle, solution, handleCellChange]);
+
+  const handleDelete = useCallback(() => {
+    if (!selectedCell) return;
+    
+    const { row, col } = selectedCell;
+    
+    // Im normalen Modus: Prüfe ob Zelle vorgegeben ist
+    if (!customMode && puzzle[row][col] !== 0) {
+      return; // Vorgefertigte Zellen können nicht gelöscht werden
+    }
+    
+    // Im Custom-Modus nach dem Lösen: Prüfe ob Zelle vorgegeben ist
+    const hasNonEmptySolution = solution.some(r => r.some(c => c !== 0));
+    if (customMode && hasNonEmptySolution && puzzle[row][col] !== 0) {
+      return; // Nach dem Lösen: Vorgefertigte Zellen nicht löschbar
+    }
+    
+    handleCellChange(row, col, 0);
+  }, [selectedCell, customMode, puzzle, solution, handleCellChange]);
+
   const checkSolution = useCallback(() => {
     // Im Custom-Modus: Wenn noch keine Lösung vorhanden ist, prüfe nur Validität
     if (customMode && isSolutionEmpty(solution)) {
@@ -491,15 +536,24 @@ function App() {
               <p>Generiere neues Sudoku...</p>
             </div>
           ) : (
-            <SudokuBoard
-              puzzle={customMode ? customPuzzle : puzzle}
-              solution={solution}
-              userGrid={userGrid}
-              onCellChange={handleCellChange}
-              showSolution={showSolution}
-              showErrors={showErrors}
-              customMode={customMode}
-            />
+            <>
+              <SudokuBoard
+                puzzle={customMode ? customPuzzle : puzzle}
+                solution={solution}
+                userGrid={userGrid}
+                onCellChange={handleCellChange}
+                showSolution={showSolution}
+                showErrors={showErrors}
+                customMode={customMode}
+                selectedCell={selectedCell}
+                onCellSelect={handleCellSelect}
+              />
+              <NumberKeyboard
+                onNumberClick={handleNumberClick}
+                onDelete={handleDelete}
+                disabled={isGenerating}
+              />
+            </>
           )}
         </div>
         

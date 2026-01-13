@@ -21,6 +21,18 @@ describe('App Basic Tests', () => {
     expect(inputs).toHaveLength(81);
   });
 
+  test('renders number keyboard with all buttons', () => {
+    render(<App />);
+    
+    // Prüfe dass alle Zahlen-Buttons vorhanden sind
+    for (let i = 1; i <= 9; i++) {
+      expect(screen.getByRole('button', { name: `Number ${i}` })).toBeInTheDocument();
+    }
+    
+    // Prüfe Delete-Button
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
   test('renders difficulty buttons', () => {
     render(<App />);
     expect(screen.getByRole('button', { name: 'Leicht' })).toBeInTheDocument();
@@ -302,6 +314,141 @@ describe('App Basic Tests', () => {
       
       // Es sollte mindestens einige vorgegebene Zellen geben
       expect(disabledInputs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('NumberKeyboard Integration Tests', () => {
+    test('clicking keyboard number button fills selected cell', () => {
+      render(<App />);
+      
+      const inputs = screen.getAllByRole('textbox');
+      const editableInputs = inputs.filter(i => !(i as HTMLInputElement).disabled);
+      
+      // Wähle eine editierbare Zelle aus
+      fireEvent.click(editableInputs[0]);
+      
+      // Klicke auf Keyboard-Button "5"
+      const button5 = screen.getByRole('button', { name: 'Number 5' });
+      fireEvent.click(button5);
+      
+      // Prüfe dass der Wert gesetzt wurde
+      expect((editableInputs[0] as HTMLInputElement).value).toBe('5');
+    });
+
+    test('clicking keyboard delete button clears selected cell', () => {
+      render(<App />);
+      
+      const inputs = screen.getAllByRole('textbox');
+      const editableInputs = inputs.filter(i => !(i as HTMLInputElement).disabled);
+      
+      // Setze einen Wert
+      fireEvent.click(editableInputs[0]);
+      fireEvent.change(editableInputs[0], { target: { value: '7' } });
+      expect((editableInputs[0] as HTMLInputElement).value).toBe('7');
+      
+      // Klicke auf Delete-Button
+      const deleteButton = screen.getByRole('button', { name: 'Delete' });
+      fireEvent.click(deleteButton);
+      
+      // Prüfe dass der Wert gelöscht wurde
+      expect((editableInputs[0] as HTMLInputElement).value).toBe('');
+    });
+
+    test('keyboard buttons do not change preset cells', () => {
+      render(<App />);
+      
+      const inputs = screen.getAllByRole('textbox');
+      const presetInputs = inputs.filter(i => (i as HTMLInputElement).disabled);
+      
+      // Es sollte mindestens eine vorgefertigte Zelle geben
+      expect(presetInputs.length).toBeGreaterThan(0);
+      
+      const presetValue = (presetInputs[0] as HTMLInputElement).value;
+      
+      // Versuche eine vorgefertigte Zelle zu ändern
+      fireEvent.click(presetInputs[0]);
+      
+      const button3 = screen.getByRole('button', { name: 'Number 3' });
+      fireEvent.click(button3);
+      
+      // Wert sollte unverändert bleiben
+      expect((presetInputs[0] as HTMLInputElement).value).toBe(presetValue);
+    });
+
+    test('keyboard is enabled when not generating', () => {
+      render(<App />);
+      
+      const button1 = screen.getByRole('button', { name: 'Number 1' });
+      expect(button1).not.toBeDisabled();
+    });
+
+    test('cell selection works with click', () => {
+      render(<App />);
+      
+      const inputs = screen.getAllByRole('textbox');
+      const editableInputs = inputs.filter(i => !(i as HTMLInputElement).disabled);
+      
+      // Klicke auf erste editierbare Zelle
+      fireEvent.click(editableInputs[0]);
+      
+      // Verwende Keyboard um Wert zu setzen
+      const button9 = screen.getByRole('button', { name: 'Number 9' });
+      fireEvent.click(button9);
+      
+      expect((editableInputs[0] as HTMLInputElement).value).toBe('9');
+      
+      // Wechsle zu anderer Zelle
+      if (editableInputs.length > 1) {
+        fireEvent.click(editableInputs[1]);
+        
+        const button2 = screen.getByRole('button', { name: 'Number 2' });
+        fireEvent.click(button2);
+        
+        expect((editableInputs[1] as HTMLInputElement).value).toBe('2');
+      }
+    });
+
+    test('can use keyboard to fill multiple cells sequentially', () => {
+      render(<App />);
+      
+      const inputs = screen.getAllByRole('textbox');
+      const editableInputs = inputs.filter(i => !(i as HTMLInputElement).disabled);
+      
+      // Stelle sicher dass wir mindestens 3 editierbare Zellen haben
+      expect(editableInputs.length).toBeGreaterThanOrEqual(3);
+      
+      // Fülle erste Zelle
+      fireEvent.click(editableInputs[0]);
+      fireEvent.click(screen.getByRole('button', { name: 'Number 1' }));
+      expect((editableInputs[0] as HTMLInputElement).value).toBe('1');
+      
+      // Fülle zweite Zelle
+      fireEvent.click(editableInputs[1]);
+      fireEvent.click(screen.getByRole('button', { name: 'Number 2' }));
+      expect((editableInputs[1] as HTMLInputElement).value).toBe('2');
+      
+      // Fülle dritte Zelle
+      fireEvent.click(editableInputs[2]);
+      fireEvent.click(screen.getByRole('button', { name: 'Number 3' }));
+      expect((editableInputs[2] as HTMLInputElement).value).toBe('3');
+    });
+
+    test('keyboard works in custom mode', () => {
+      render(<App />);
+      
+      // Wechsle zu Custom-Modus
+      const customButton = screen.getByText('Eigenes Sudoku');
+      fireEvent.click(customButton);
+      
+      const inputs = screen.getAllByRole('textbox');
+      
+      // In Custom-Modus sollten alle Zellen editierbar sein
+      fireEvent.click(inputs[0]);
+      
+      const button4 = screen.getByRole('button', { name: 'Number 4' });
+      fireEvent.click(button4);
+      
+      expect((inputs[0] as HTMLInputElement).value).toBe('4');
     });
   });
 });

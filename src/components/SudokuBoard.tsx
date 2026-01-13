@@ -11,6 +11,8 @@ interface SudokuBoardProps {
   showSolution: boolean;
   showErrors: boolean;
   customMode?: boolean;
+  selectedCell: { row: number; col: number } | null;
+  onCellSelect: (row: number, col: number) => void;
 }
 
 const SudokuBoard: React.FC<SudokuBoardProps> = ({
@@ -20,7 +22,9 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
   onCellChange,
   showSolution,
   showErrors,
-  customMode = false
+  customMode = false,
+  selectedCell,
+  onCellSelect
 }) => {
   const handleInputChange = (row: number, col: number, value: string) => {
     const num = value === '' ? 0 : parseInt(value, 10);
@@ -52,6 +56,11 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
 
   const getCellClassName = (row: number, col: number): string => {
     const classes = ['cell'];
+    
+    // Hervorhebung für ausgewählte Zelle
+    if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+      classes.push('selected');
+    }
     
     // Hervorhebung der 3x3 Blöcke
     if (col % 3 === 2 && col !== 8) classes.push('right-border');
@@ -103,6 +112,8 @@ const SudokuBoard: React.FC<SudokuBoardProps> = ({
               className={getCellClassName(row, col)}
               value={displayValue(row, col)}
               onChange={(e) => handleInputChange(row, col, e.target.value)}
+              onClick={() => onCellSelect(row, col)}
+              onFocus={() => onCellSelect(row, col)}
               disabled={(!customMode && puzzle[row][col] !== 0) || showSolution}
               maxLength={1}
               inputMode="numeric"

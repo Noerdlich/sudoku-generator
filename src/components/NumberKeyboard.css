@@ -1,0 +1,104 @@
+.number-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.keyboard-btn {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c3e50;
+  background-color: #fff;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.keyboard-btn:hover:not(:disabled) {
+  background-color: #e8f4f8;
+  border-color: #3498db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+}
+
+.keyboard-btn:active:not(:disabled) {
+  transform: translateY(0);
+  background-color: #d4e9f4;
+  box-shadow: 0 1px 2px rgba(52, 152, 219, 0.3);
+}
+
+.keyboard-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background-color: #ecf0f1;
+}
+
+.keyboard-delete {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.keyboard-delete:hover:not(:disabled) {
+  background-color: #fecaca;
+  border-color: #f87171;
+}
+
+.keyboard-delete:active:not(:disabled) {
+  background-color: #fca5a5;
+}
+
+/* Touch-optimierte Größen für Mobilgeräte */
+@media (max-width: 768px) {
+  .keyboard-btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 18px;
+  }
+  
+  .number-keyboard {
+    padding: 12px;
+    gap: 6px;
+  }
+  
+  .keyboard-row {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .keyboard-btn {
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 16px;
+  }
+  
+  .number-keyboard {
+    padding: 10px;
+    gap: 5px;
+  }
+  
+  .keyboard-row {
+    gap: 5px;
+  }
+}
