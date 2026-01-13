@@ -261,6 +261,62 @@ function App() {
     }
   }, [showErrors, customMode, customPuzzle, solution, notesMode]);
 
+  // Keyboard Event Listener für Computer-Tastatur
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ignoriere wenn kein Feld ausgewählt ist
+      if (!selectedCell) return;
+      
+      // Ignoriere wenn Eingabefeld fokussiert ist
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
+      
+      const { row, col } = selectedCell;
+      
+      // Prüfe ob Zelle editierbar ist
+      const currentPuzzle = customMode ? customPuzzle : puzzle;
+      if (currentPuzzle[row][col] !== 0 && !customMode) return;
+      
+      // Zahlen 1-9
+      if (event.key >= '1' && event.key <= '9') {
+        event.preventDefault();
+        const num = parseInt(event.key, 10);
+        handleCellChange(row, col, num);
+      }
+      // Backspace, Delete oder 0 für Löschen
+      else if (event.key === 'Backspace' || event.key === 'Delete' || event.key === '0') {
+        event.preventDefault();
+        handleCellChange(row, col, 0);
+      }
+      // Pfeiltasten für Navigation
+      else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        event.preventDefault();
+        let newRow = row;
+        let newCol = col;
+        
+        switch (event.key) {
+          case 'ArrowUp':
+            newRow = Math.max(0, row - 1);
+            break;
+          case 'ArrowDown':
+            newRow = Math.min(8, row + 1);
+            break;
+          case 'ArrowLeft':
+            newCol = Math.max(0, col - 1);
+            break;
+          case 'ArrowRight':
+            newCol = Math.min(8, col + 1);
+            break;
+        }
+        
+        setSelectedCell({ row: newRow, col: newCol });
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCell, customMode, customPuzzle, puzzle, handleCellChange]);
+
   const handleReset = useCallback(() => {
     setUserGrid(createEmptyGrid());
     setShowSolution(false);
