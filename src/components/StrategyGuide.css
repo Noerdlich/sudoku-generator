@@ -41,6 +41,37 @@
   letter-spacing: 1px;
 }
 
+/* Mobile: Button unten rechts */
+@media (max-width: 768px) {
+  .strategy-guide-toggle {
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: auto;
+    transform: none;
+    writing-mode: horizontal-tb;
+    flex-direction: row;
+    padding: 12px 16px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .strategy-guide-toggle.open {
+    bottom: calc(80vh + 20px);
+    right: 20px;
+    left: auto;
+  }
+  
+  .strategy-guide-toggle:hover {
+    padding-left: 16px;
+    transform: scale(1.05);
+  }
+  
+  .strategy-guide-toggle .text {
+    display: none; /* Nur Icon auf Mobile */
+  }
+}
+
 .strategy-guide-overlay {
   position: fixed;
   top: 0;
@@ -259,15 +290,26 @@
   margin: 0;
   padding-left: 20px;
   color: #555;
-  font-size: 14px;
-  line-height: 1.8;
-}
+  font-size: 1- Panel von unten auf Mobile */
+@media (max-width: 768px) {
+  .strategy-guide-panel {
+    width: 100%;
+    height: 80vh;
+    max-height: 600px;
+    left: 0;
+    top: auto;
+    bottom: -80vh;
+    border-radius: 16px 16px 0 0;
+    transition: bottom 0.3s ease;
+  }
 
-.strategy-section li {
-  margin-bottom: 8px;
-}
-
-.strategy-section li:last-child {
+  .strategy-guide-panel.open {
+    bottom: 0;
+    left: 0;
+  }
+  
+  .strategy-guide-header {
+    border-radius: 16px 16px 0 0hild {
   margin-bottom: 0;
 }
 
