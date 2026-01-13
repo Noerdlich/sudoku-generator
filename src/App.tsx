@@ -53,20 +53,31 @@ function App() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(true);
 
-  // Timer für Lösungszeit
+  // Timer für Lösungszeit (max 99:59:59)
   useEffect(() => {
-    if (isTimerRunning) {
+    if (isTimerRunning && elapsedTime < 359999) {
       const interval = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
+        setElapsedTime(prev => {
+          if (prev >= 359999) {
+            setIsTimerRunning(false);
+            return 359999;
+          }
+          return prev + 1;
+        });
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [isTimerRunning]);
+  }, [isTimerRunning, elapsedTime]);
 
-  // Formatiere Zeit in MM:SS
+  // Formatiere Zeit in MM:SS oder HH:MM:SS
   const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -557,6 +568,10 @@ function App() {
           )}
         </div>
         
+        <div className="timer-display">
+          ⏱️ Zeit: {formatTime(elapsedTime)}
+        </div>
+        
         <div className="board-container">
           {isGenerating ? (
             <div className="loading">
@@ -583,10 +598,6 @@ function App() {
               />
             </>
           )}
-        </div>
-        
-        <div className="timer-display">
-          ⏱️ Zeit: {formatTime(elapsedTime)}
         </div>
         
           <div className="info">

@@ -595,5 +595,34 @@ describe('App Basic Tests', () => {
       
       expect(screen.getByText(/10:30/)).toBeInTheDocument();
     });
+
+    test('timer changes to HH:MM:SS format after one hour', () => {
+      render(<App />);
+      
+      // Warte 1 Stunde, 5 Minuten und 30 Sekunden (3930 Sekunden)
+      act(() => {
+        jest.advanceTimersByTime(3930000);
+      });
+      
+      expect(screen.getByText(/01:05:30/)).toBeInTheDocument();
+    });
+
+    test('timer stops at 99:59:59', () => {
+      render(<App />);
+      
+      // Warte 99 Stunden, 59 Minuten und 59 Sekunden (359999 Sekunden)
+      act(() => {
+        jest.advanceTimersByTime(359999000);
+      });
+      
+      expect(screen.getByText(/99:59:59/)).toBeInTheDocument();
+      
+      // Warte weitere 5 Sekunden - Timer sollte nicht weiterzählen
+      act(() => {
+        jest.advanceTimersByTime(5000);
+      });
+      
+      expect(screen.getByText(/99:59:59/)).toBeInTheDocument();
+    });
   });
 });
