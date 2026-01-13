@@ -51,24 +51,30 @@
     transform: none;
     writing-mode: horizontal-tb;
     flex-direction: row;
-    padding: 12px 16px;
-    border-radius: 50px;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    border-radius: 50%;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    justify-content: center;
+    align-items: center;
   }
   
   .strategy-guide-toggle.open {
-    bottom: calc(80vh + 20px);
-    right: 20px;
-    left: auto;
+    /* Button bleibt an seiner Position, Panel legt sich darüber */
   }
   
   .strategy-guide-toggle:hover {
-    padding-left: 16px;
+    padding: 0;
     transform: scale(1.05);
   }
   
   .strategy-guide-toggle .text {
     display: none; /* Nur Icon auf Mobile */
+  }
+  
+  .strategy-guide-toggle .icon {
+    font-size: 28px;
   }
 }
 
@@ -296,7 +302,7 @@
 /* Panel von unten auf Mobile */
 @media (max-width: 768px) {
   .strategy-guide-panel {
-    width: 100%;
+    width: 100vw;
     height: 80vh;
     max-height: 600px;
     left: 0;
@@ -304,6 +310,9 @@
     bottom: -80vh;
     border-radius: 16px 16px 0 0;
     transition: bottom 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
   .strategy-guide-panel.open {
