@@ -62,6 +62,14 @@ function App() {
   const [notesMode, setNotesMode] = useState(false);
   const [candidates, setCandidates] = useState<Set<number>[][]>(createEmptyCandidates);
 
+  // Helper function to show messages (ensures new messages always trigger)
+  const showMessage = useCallback((text: string, type: MessageType) => {
+    setMessage(null); // Reset first
+    setTimeout(() => {
+      setMessage({ text, type });
+    }, 10);
+  }, []);
+
   // Timer für Lösungszeit (max 99:59:59)
   useEffect(() => {
     if (isTimerRunning && elapsedTime < 359999) {
@@ -121,32 +129,32 @@ function App() {
         if (customMode && isSolutionEmpty(solution)) {
           const isValid = validateGrid(combinedGrid);
           if (isValid) {
-            setMessage({ 
-              text: '✅ Alle Zahlen sind korrekt platziert! Das Sudoku ist gültig.', 
-              type: 'success' 
-            });
+            showMessage(
+              '✅ Alle Zahlen sind korrekt platziert! Das Sudoku ist gültig.', 
+              'success'
+            );
           } else {
             setShowErrors(true);
-            setMessage({ 
-              text: '❌ Es gibt noch Regelverstöße. Überprüfe die rot markierten Felder.', 
-              type: 'error' 
-            });
+            showMessage(
+              '❌ Es gibt noch Regelverstöße. Überprüfe die rot markierten Felder.', 
+              'error'
+            );
           }
         } else {
           // Normal-Modus oder Custom-Modus mit Lösung: Vergleiche mit solution
           if (isGridCorrect(combinedGrid, solution)) {
             setShowErrors(false);
             setIsTimerRunning(false);
-            setMessage({ 
-              text: '🎉 Herzlichen Glückwunsch! Du hast das Sudoku perfekt gelöst!', 
-              type: 'success' 
-            });
+            showMessage(
+              '🎉 Herzlichen Glückwunsch! Du hast das Sudoku perfekt gelöst!', 
+              'success'
+            );
           } else {
             setShowErrors(true);
-            setMessage({ 
-              text: '❌ Fast geschafft! Einige Zahlen sind noch nicht korrekt.', 
-              type: 'error' 
-            });
+            showMessage(
+              '❌ Fast geschafft! Einige Zahlen sind noch nicht korrekt.', 
+              'error'
+            );
           }
         }
       }
@@ -358,7 +366,7 @@ function App() {
   const solveCustomPuzzle = useCallback(() => {
     // Validiere das Custom-Sudoku vor dem Lösen
     if (!validateGrid(customPuzzle)) {
-      setMessage({ text: 'Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.', type: 'error' });
+      showMessage('Das Sudoku enthält Regelverstöße (z.B. doppelte Zahlen). Bitte korrigiere die Eingaben zuerst.', 'error');
       return;
     }
     
@@ -368,11 +376,11 @@ function App() {
       setSolution(result.solution);
       setUserGrid(createEmptyGrid());
       setShowErrors(false);
-      setMessage({ text: 'Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.', type: 'success' });
+      showMessage('Sudoku erfolgreich gelöst! Du kannst jetzt mit Tipps spielen.', 'success');
     } else {
-      setMessage({ text: 'Dieses Sudoku hat keine gültige Lösung. Bitte überprüfe deine Eingaben.', type: 'error' });
+      showMessage('Dieses Sudoku hat keine gültige Lösung. Bitte überprüfe deine Eingaben.', 'error');
     }
-  }, [customPuzzle]);
+  }, [customPuzzle, showMessage]);
 
   const showHint = useCallback(() => {
     // Erstelle temporäres Grid mit korrekten Werten (ignoriere falsche Benutzereingaben)
@@ -388,7 +396,7 @@ function App() {
     const hasEmptyCells = currentGrid.some(row => row.some(cell => cell === 0));
     
     if (!hasEmptyCells) {
-      setMessage({ text: 'Alle korrekten Felder sind bereits ausgefüllt! Überprüfe falsche Eingaben (rot markiert).', type: 'warning' });
+      showMessage('Alle korrekten Felder sind bereits ausgefüllt! Überprüfe falsche Eingaben (rot markiert).', 'warning');
       return;
     }
     
@@ -426,10 +434,10 @@ function App() {
       // Speichere die Funktion als Callback
       (window as any).openStrategyGuide = openStrategyLink;
       
-      setMessage({ 
-        text: `${difficultyEmoji} Tipp (${hint.strategy}): ${hint.explanation}`, 
-        type: 'info' 
-      });
+      showMessage(
+        `${difficultyEmoji} Tipp (${hint.strategy}): ${hint.explanation}`, 
+        'info'
+      );
     } else {
       // Fallback: Wenn keine logische Strategie gefunden wurde, zeige zufälligen korrekten Wert
       // (Dies sollte sehr selten passieren, nur bei sehr schweren Puzzles)
@@ -453,10 +461,10 @@ function App() {
           return newGrid;
         });
         
-        setMessage({ 
-          text: `💫 Tipp: ${hintNumber} in Zeile ${row + 1}, Spalte ${col + 1} (Fortgeschrittene Technik erforderlich)`, 
-          type: 'info' 
-        });
+        showMessage(
+          `💫 Tipp: ${hintNumber} in Zeile ${row + 1}, Spalte ${col + 1} (Fortgeschrittene Technik erforderlich)`, 
+          'info'
+        );
       }
     }
     
@@ -516,13 +524,13 @@ function App() {
       
       if (hasErrors) {
         setShowErrors(true);
-        setMessage({ text: 'Es gibt Regelverstöße! Die fehlerhaften Felder wurden rot markiert.', type: 'error' });
+        showMessage('Es gibt Regelverstöße! Die fehlerhaften Felder wurden rot markiert.', 'error');
       } else if (isComplete) {
         setShowErrors(false);
-        setMessage({ text: 'Alle Zahlen sind bisher korrekt eingetragen! Das Sudoku ist vollständig.', type: 'success' });
+        showMessage('Alle Zahlen sind bisher korrekt eingetragen! Das Sudoku ist vollständig.', 'success');
       } else {
         setShowErrors(false);
-        setMessage({ text: 'Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', type: 'success' });
+        showMessage('Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', 'success');
       }
       return;
     }
@@ -554,22 +562,22 @@ function App() {
     // Wenn es Regelverstöße gibt, zeige diese als Fehler
     if (hasRuleViolations) {
       setShowErrors(true);
-      setMessage({ text: 'Es gibt Regelverstöße (z.B. doppelte Zahlen in Zeile/Spalte/Block)! Die fehlerhaften Felder wurden rot markiert.', type: 'error' });
+      showMessage('Es gibt Regelverstöße (z.B. doppelte Zahlen in Zeile/Spalte/Block)! Die fehlerhaften Felder wurden rot markiert.', 'error');
     } else if (complete && correct) {
       setShowErrors(false);
-      setMessage({ text: 'Gratulation! Du hast das Sudoku richtig gelöst!', type: 'success' });
+      showMessage('Gratulation! Du hast das Sudoku richtig gelöst!', 'success');
     } else if (hasErrors) {
       setShowErrors(true);
       if (complete) {
-        setMessage({ text: 'Falsche Felder wurden rot markiert. Korrigiere sie und versuche es erneut.', type: 'error' });
+        showMessage('Falsche Felder wurden rot markiert. Korrigiere sie und versuche es erneut.', 'error');
       } else {
-        setMessage({ text: 'Einige Felder sind falsch (rot markiert) und das Sudoku ist noch nicht vollständig.', type: 'warning' });
+        showMessage('Einige Felder sind falsch (rot markiert) und das Sudoku ist noch nicht vollständig.', 'warning');
       }
     } else {
       setShowErrors(false);
-      setMessage({ text: 'Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', type: 'success' });
+      showMessage('Alle bisherigen Einträge sind korrekt! Das Sudoku ist noch nicht vollständig.', 'success');
     }
-  }, [puzzle, userGrid, solution, customMode, customPuzzle]);
+  }, [puzzle, userGrid, solution, customMode, customPuzzle, showMessage]);
 
   return (
     <div className="App">

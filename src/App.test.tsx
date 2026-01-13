@@ -134,16 +134,15 @@ describe('App Basic Tests', () => {
   });
 
   describe('Prüfen Button Tests', () => {
-    test('shows message when puzzle is not complete', () => {
+    test('shows message when puzzle is not complete', async () => {
       render(<App />);
       
       const checkButton = screen.getByText('Prüfen');
       fireEvent.click(checkButton);
       
       // Prüfe ob MessageBox erscheint
-      const messageBox = screen.getByTestId('message-box');
-      expect(messageBox).toBeInTheDocument();
-      expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i);
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i));
     });
 
     test('detects duplicate numbers in custom mode', () => {
@@ -167,15 +166,15 @@ describe('App Basic Tests', () => {
       expect(getCellValue(inputs[1])).toBe('5');
     });
 
-    test('shows success when all entries are correct', () => {
+    test('shows success when all entries are correct', async () => {
       render(<App />);
       
       const checkButton = screen.getByText('Prüfen');
       fireEvent.click(checkButton);
       
       // Bei leerem oder korrektem Puzzle sollte eine Meldung kommen
-      expect(screen.getByTestId('message-box')).toBeInTheDocument();
-      expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i);
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('message-text')).toHaveTextContent(/korrekt/i));
     });
 
     test('validates duplicate detection in custom mode', () => {
@@ -200,7 +199,7 @@ describe('App Basic Tests', () => {
       expect(getCellValue(inputs[1])).toBe('7');
     });
 
-    test('shows correct message for incomplete but valid puzzle', () => {
+    test('shows correct message for incomplete but valid puzzle', async () => {
       render(<App />);
       
       const inputs = screen.getAllByRole('button', { name: /cell-/i });
@@ -216,7 +215,7 @@ describe('App Basic Tests', () => {
       fireEvent.click(checkButton);
       
       // Prüfe ob MessageBox mit relevantem Text erscheint
-      expect(screen.getByTestId('message-box')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
     });
   });
 
@@ -230,7 +229,7 @@ describe('App Basic Tests', () => {
       expect(screen.getByText('🧩 Sudoku lösen')).toBeInTheDocument();
     });
 
-    test('detects invalid custom sudoku with duplicates', () => {
+    test('detects invalid custom sudoku with duplicates', async () => {
       render(<App />);
       
       const customButton = screen.getByText('Eigenes Sudoku');
@@ -250,11 +249,11 @@ describe('App Basic Tests', () => {
       fireEvent.click(solveButton);
       
       // Prüfe ob Fehlermeldung erscheint
-      expect(screen.getByTestId('message-box')).toBeInTheDocument();
-      expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i);
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i));
     });
 
-    test('allows checking custom puzzle after solving', () => {
+    test('allows checking custom puzzle after solving', async () => {
       render(<App />);
       
       const customButton = screen.getByText('Eigenes Sudoku');
@@ -277,10 +276,10 @@ describe('App Basic Tests', () => {
       fireEvent.click(solveButton);
       
       // MessageBox sollte erscheinen
-      expect(screen.getByTestId('message-box')).toBeInTheDocument();
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
     });
 
-    test('detects rule violations after solving custom sudoku', () => {
+    test('detects rule violations after solving custom sudoku', async () => {
       render(<App />);
       
       const customButton = screen.getByText('Eigenes Sudoku');
@@ -306,8 +305,8 @@ describe('App Basic Tests', () => {
       fireEvent.click(solveButton);
       
       // Prüfe ob gelöst wurde (MessageBox sollte Erfolg melden)
-      expect(screen.getByTestId('message-box')).toBeInTheDocument();
-      expect(screen.getByTestId('message-text')).toHaveTextContent(/erfolgreich gelöst/i);
+      await waitFor(() => expect(screen.getByTestId('message-box')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getByTestId('message-text')).toHaveTextContent(/erfolgreich gelöst/i));
       
       // Nach dem Lösen: Füge eine 1 an Position (1,7) hinzu (Zeile 1, Spalte 7)
       // Das verletzt die Regel da bereits eine 1 in Zeile 1 an Position (1,4) ist
@@ -320,7 +319,7 @@ describe('App Basic Tests', () => {
       fireEvent.click(checkButton);
       
       // Es sollte einen Regelverstoß erkennen
-      expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i);
+      await waitFor(() => expect(screen.getByTestId('message-text')).toHaveTextContent(/regelverstöße/i));
     });
   });
 
